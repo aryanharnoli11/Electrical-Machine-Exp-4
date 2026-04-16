@@ -272,7 +272,7 @@ jsPlumb.ready(function () {
         // ── Guide turned ON ──
         guideActive = true;
         speakBtn.setAttribute("aria-pressed", "true");
-        speakBtn.querySelector(".speak-btn__label").textContent = "GUIDING. . .";
+        speakBtn.querySelector(".speak-btn__label").textContent = "Guiding...";
 
         currentStepIndex = getFirstMissingStepIndex();
 
@@ -307,7 +307,7 @@ jsPlumb.ready(function () {
       stopAudio(); // stop any playing audio
       clearSpeakHighlights();
       speakBtn.setAttribute("aria-pressed", "false");
-      speakBtn.querySelector(".speak-btn__label").textContent = "TAP TO LISTEN";
+      speakBtn.querySelector(".speak-btn__label").textContent = "AI Guide";
 
     });
 
@@ -1556,7 +1556,7 @@ jsPlumb.ready(function () {
       }
       if (speakBtn) {
         speakBtn.setAttribute("aria-pressed", "false");
-        speakBtn.querySelector(".speak-btn__label").textContent = "TAP TO LISTEN";
+        speakBtn.querySelector(".speak-btn__label").textContent = "AI Guide";
       }
       enableCheckAndAutoConnect();
       if (typeof jsPlumb.deleteEveryConnection === "function") {

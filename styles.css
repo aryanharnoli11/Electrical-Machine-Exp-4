@@ -59,7 +59,7 @@
 
         .top-row {
             display: grid;
-            grid-template-columns: 1fr 2.6fr 1.2fr;
+            grid-template-columns: minmax(280px, 1fr) minmax(980px, 2.6fr) minmax(420px, 1.3fr);
             gap: clamp(8px, 2vw, 16px);
             border-bottom: 0px solid #111;
         }
@@ -77,7 +77,7 @@
         justify-content: center;
         align-items: flex-start;  /* Align content to top */
         width: 100%;
-        max-width: 410px;
+        max-width: 460px;
         min-width: 0;
     }
 
@@ -624,8 +624,9 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: min(100%, 280px);
-        margin-top: 16px;  /* Spacing from buttons */
+        width: 100%;
+        max-width: 420px;
+        margin: 14px auto 0;
     }
 
         .obs-title {
@@ -633,6 +634,8 @@
         text-align: center;
         margin-left: 0;  /* Center properly (was 20px - caused offset) */
         width: 100%;
+        display: block;
+        box-sizing: border-box;
     }
 
 
@@ -749,23 +752,65 @@
     
 
     .right-column .pill-stack {
-        display: flex;  /* Changed from grid */
-        flex-direction: column;  /* Stack buttons vertically */
-        gap: 16px;  /* Fixed gap (was 40px - too large) */
-        width: min(100%, 280px);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: min(100%, 442px);
+        min-width: 358px;
         max-height: none;  /* Remove height restriction */
         overflow-y: visible;  /* Allow natural flow */
         padding: 0;  /* Remove padding */
     }
 
+    .controls-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(170px, 1fr));
+        gap: 18px 18px;
+        width: 100%;
+        min-width: 358px;
+        max-width: 420px;
+        margin: 0 auto;
+        align-items: stretch;
+    }
+
+    .controls-grid .instructions-wrapper,
+    .controls-grid .pill-btn {
+        width: 100%;
+        min-width: 170px;
+    }
+
+    .controls-grid .pill-btn {
+        height: 60px;
+        min-height: 60px;
+        padding: 13px 22px;
+        border-radius: 999px;
+        gap: 10px;
+        white-space: nowrap;
+    }
+
+    .controls-grid .pill-btn span {
+        white-space: nowrap;
+    }
+
+    .controls-grid .pill-btn i,
+    .controls-grid .speak-btn__icon {
+        flex-shrink: 0;
+    }
+
+    .controls-grid .instructions-wrapper {
+        margin: 0;
+        display: flex;
+        justify-content: center;
+    }
+
         .pill-btn {
         position: relative;
         width: 100%;
-        color: #c1865c;                          /* gold text */
-        border: 1px solid #B89B3E;              /* gold border */
+        color: #f4f8ff;
+        border: 1px solid rgba(118, 139, 172, 0.7);
         padding: 10px 18px;
-        border-radius: 50px;
-        font-size: 15px;
+        border-radius: 999px;
+        font-size: 16px;
         font-weight: 700;
         letter-spacing: 0.02em;
         cursor: pointer;
@@ -773,13 +818,13 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background-image: linear-gradient(135deg, #2C2C2C, #3B3B3B);  /* dark charcoal */
+        background-image: radial-gradient(140% 120% at 20% 12%, #2a3546 0%, #161f2d 55%, #101723 100%);
         background-size: 200% 200%;
         box-shadow:
-            0 8px 18px rgba(15, 23, 42, 0.35),
-            inset 0 1px 0 rgba(255, 255, 255, 0.18),
-            inset 0 -3px 10px rgba(0, 0, 0, 0.4);
-        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+            0 10px 20px rgba(8, 12, 19, 0.34),
+            inset 0 1px 0 rgba(220, 233, 255, 0.18),
+            inset 0 -3px 10px rgba(0, 0, 0, 0.35);
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
         transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease, background-position 0.4s ease;
     }
 
@@ -792,11 +837,11 @@
         color: #fff;
         transform: none;
         box-shadow:
-            0 0 25px rgba(193, 134, 92, 1),
-            0 12px 24px rgba(15, 23, 42, 0.45),
-            inset 0 1px 0 rgba(255, 255, 255, 0.22),
-            inset 0 -4px 12px rgba(0, 0, 0, 0.45);
-        filter: saturate(1.02) brightness(1.12);
+            0 0 24px rgba(109, 159, 255, 0.38),
+            0 12px 24px rgba(9, 18, 34, 0.42),
+            inset 0 1px 0 rgba(230, 241, 255, 0.26),
+            inset 0 -4px 12px rgba(0, 0, 0, 0.42);
+        filter: saturate(1.08) brightness(1.08);
     }
 
     .pill-btn:active {
@@ -1577,15 +1622,15 @@
         /* Default wave state */
         .speak-btn__wave {
             fill: none;
-            stroke: #c1865c;
+            stroke: #8bbdff;
             stroke-width: 3;
-            opacity: 0.35;
+            opacity: 0.7;
         }
         
     /* White waves on hover — same as other pill-btn hover */
     .speak-btn:hover .speak-btn__wave {
         stroke: white;
-        opacity: 0.7;
+        opacity: 0.95;
     }
 
 
@@ -2813,4 +2858,3 @@
         color: #f2f2f2 !important;
     }
 }
-
