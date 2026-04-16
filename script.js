@@ -641,6 +641,7 @@ jsPlumb.ready(function () {
   }
 
   const starterHandle = document.querySelector(".starter-handle");
+  const starterBody = document.querySelector(".starter-body");
 
   let fieldLocked = false;
   let fieldDragging = false;
@@ -654,8 +655,42 @@ jsPlumb.ready(function () {
   let starterEngaged = false;
   let startMouseX = 0;
   const START_X = 0;
-  const END_X = 90;
-  const CURVE_HEIGHT = 25;
+  const starterMotion = {
+    endX: 90,
+    curveHeight:20
+  };
+
+  const STARTER_SLOT_END_X_RATIO = 0.74
+  const STARTER_CURVE_RATIO = 0.095;
+
+  function recalcStarterMotion() {
+    if (!starterBody || !starterHandle) return;
+    const bodyRect = starterBody.getBoundingClientRect();
+    if (!bodyRect || bodyRect.width <= 0 || bodyRect.height <= 0) return;
+
+    const prevTransform = starterHandle.style.transform;
+    starterHandle.style.transform = "translate(0px, 0px)";
+    const baseHandleRect = starterHandle.getBoundingClientRect();
+    starterHandle.style.transform = prevTransform;
+
+    const desiredCenterX = bodyRect.left + bodyRect.width * STARTER_SLOT_END_X_RATIO;
+    const baseCenterX = baseHandleRect.left + baseHandleRect.width / 2;
+    const desiredMoveX = desiredCenterX - baseCenterX;
+
+    // Hard clamp: knob must stay inside starter body.
+    const maxMoveInsideBody = (bodyRect.right - 4) - baseHandleRect.right;
+    const clampedMoveX = Math.min(desiredMoveX, maxMoveInsideBody);
+
+    starterMotion.endX = Math.max(1, Math.round(clampedMoveX));
+    starterMotion.curveHeight = Math.max(14, Math.round(bodyRect.height * STARTER_CURVE_RATIO));
+
+    if (starterEngaged && starterHandle) {
+      starterHandle.style.transform = `translate(${starterMotion.endX}px, 0px)`;
+    }
+  }
+
+  recalcStarterMotion();
+  window.addEventListener("resize", recalcStarterMotion);
 
   const armatureKnob = document.querySelector(".nob2");
   const voltNeedle = document.querySelector(".meter-needle1");
@@ -914,11 +949,11 @@ jsPlumb.ready(function () {
     document.addEventListener("mousemove", (e) => {
       if (!starterDragging || starterEngaged) return;
       const deltaX = e.clientX - startMouseX;
-      let moveX = Math.max(START_X, Math.min(END_X, deltaX));
-      const progress = moveX / END_X;
-      const curveY = Math.sin(progress * Math.PI) * CURVE_HEIGHT;
+      let moveX = Math.max(START_X, Math.min(starterMotion.endX, deltaX));
+      const progress = moveX / starterMotion.endX;
+      const curveY = Math.sin(progress * Math.PI) * starterMotion.curveHeight;
       starterHandle.style.transform = `translate(${moveX}px, ${-curveY}px)`;
-      if (moveX >= END_X - 2) engageStarter();
+      if (moveX >= starterMotion.endX - 2) engageStarter();
     });
   }
 
@@ -977,7 +1012,7 @@ jsPlumb.ready(function () {
   function engageStarter() {
     starterEngaged = true;
     starterDragging = false;
-    starterHandle.style.transform = `translate(${END_X}px, 0px)`;
+    starterHandle.style.transform = `translate(${starterMotion.endX}px, 0px)`;
     starterHandle.style.cursor = "default";
     localStorage.setItem("experimentStartTime", Date.now());
     console.log("✅ Starter ON");

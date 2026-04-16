@@ -132,44 +132,44 @@
  #pointR {
    /*Endpoint move*/
    position: absolute;
-   left: 75px;
-   top: 185px;
+   left: 58px;
+   top: 245px;
  }
 
  #pointB {
    position: absolute;
-   left: 106px;
-   top: 185px;
+   left: 104px;
+   top: 245px;
  }
 
  #pointL {
    position: absolute;
-   left: 186px;
-   top: 185px;
+   left: 185px;
+   top: 243px;
  }
 
  #pointF {
    position: absolute;
-   left: 215px;
-   top: 185px;
+   left: 227px;
+   top: 243px;
  }
 
  #pointA {
    position: absolute;
-   left: 246px;
-   top: 185px;
+   left: 268px;
+   top: 243px;
  }
 
 #pointC {
   position: absolute;
-  left: 22%;
-  top: 90%;
+  left: 30%;
+  top: 93%;
  }
 
   #pointD {
   position: absolute;
-  left: 78%;
-  top: 90%;
+  left: 72%;
+  top: 93%;
 
   }
 
@@ -286,8 +286,8 @@
    position: absolute;
    width: 24px;
    height: 24px;
-   left: 60px;
-   top: 195px;
+   left: 48px;
+   top: 257px;
    font-weight: bold;
    z-index: 10;
  }
@@ -297,8 +297,8 @@
    position: absolute;
    width: 24px;
    height: 24px;
-   left: 90px;
-   top: 195px;
+   left: 96px;
+   top: 257px;
    z-index: 10;
  }
 
@@ -307,8 +307,8 @@
    position: absolute;
    width: 24px;
    height: 24px;
-   left: 170px;
-   top: 195px;
+   left: 161px;
+   top: 256px;
    z-index: 10;
  }
 
@@ -317,8 +317,8 @@
    position: absolute;
    width: 24px;
    height: 24px;
-   left: 200px;
-   top: 195px;
+   left: 203px;
+   top: 256px;
    z-index: 10;
  }
 
@@ -327,8 +327,8 @@
    position: absolute;
    width: 24px;
    height: 24px;
-   left: 230px;
-   top: 195px;
+   left: 246px;
+   top: 256px;
    z-index: 10;
  }
 
@@ -337,8 +337,8 @@
   position: absolute;
   width: 24px;
   height: 24px;
-  left: calc(22% - 16px);
-  top: 91%;
+  left: calc(30% - 16px);
+  top: 95%;
  }
 
  .point-D {
@@ -346,8 +346,8 @@
   position: absolute;
   width: 24px;
   height: 24px;
-  left: calc(78% - 16px);
-  top: 91%;
+  left: calc(72% - 16px);
+  top: 95%;
  }
 
 .point-M {
@@ -356,7 +356,7 @@
   width: 24px;
   height: 24px;
   left: calc(22% - 16px);
-  top: 91%;
+  top: 92%;
 }
 
 .point-N {
@@ -365,7 +365,7 @@
   width: 24px;
   height: 24px;
   left: calc(78% - 16px);
-  top: 91%;
+  top: 92%;
  }
 
  .point-E {
@@ -374,7 +374,7 @@
   width: 24px;
   height: 24px;
   left: calc(22% - 16px);
-  top: 91%;
+  top: 92%;
  }
 
  .point-G {
@@ -382,8 +382,8 @@
   position: absolute;
   width: 24px;
   height: 24px;
-  left: calc(78% - 16px);
-  top: 91%;
+  left: calc(73.5% - 16px);
+  top: 92%;
  }
 
  .point-H {

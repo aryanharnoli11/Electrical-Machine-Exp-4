@@ -59,7 +59,7 @@
 
         .top-row {
             display: grid;
-            grid-template-columns: minmax(280px, 1fr) minmax(980px, 2.6fr) minmax(420px, 1.3fr);
+            grid-template-columns: minmax(360px, 1.15fr) minmax(980px, 2.6fr) minmax(420px, 1.3fr);
             gap: clamp(8px, 2vw, 16px);
             border-bottom: 0px solid #111;
         }
@@ -69,6 +69,10 @@
         .right-column {
             padding: clamp(12px, 2vw, 18px);
             border-right: 3px solid #111;
+        }
+
+        .left-column {
+            padding-inline: 12px;
         }
 
         .right-column {
@@ -116,8 +120,42 @@
         }
 
         .mcb-starter-section {
+            --mcb-starter-gap: 30px;
+            --mcb-image-width: 100%;
+            --mcb-image-height: auto;
+            --mcb-image-x: 0px;
+            --mcb-image-y: 0px;
+            --mcb-image-rotate: 0deg;
+
+            --starter-image-width: 106%;
+            --starter-image-height: 72%;
+            --starter-image-x: 0px;
+            --starter-image-y: 0px;
+            --starter-image-rotate: 0deg;
+
+            --starter-handle-width: 16.5%;
+            --starter-handle-top: 34%;
+            --starter-handle-left: 19%;
+            --starter-handle-x: 0px;
+            --starter-handle-y: 0px;
+            --starter-handle-rotate: 0deg;
+
+            --mcb-endpoint-x: 8px;
+            --mcb-endpoint-y: 0px;
+            --starter-endpoint-x: -8px;
+            --starter-endpoint-y: 0px;
+
+            --mcb-label-top: 280px;
+            --mcb-label-left: 45%;
+            --mcb-label-x: 8px;
+            --mcb-label-y: 0px;
+
+            --starter-label-top: 335px;
+            --starter-label-left: 54%;
+            --starter-label-x: -8px;
+            --starter-label-y: 0px;
             background-image: url(images/wooden-texture.jpg);
-            height: 286px;
+            height: 321px;
             background-size: cover;
             background-position: center;
             border: 4px solid #8c6a48;
@@ -132,38 +170,68 @@
         .mcb-block {
             position: absolute;
             top: 1%;
-            left: 10.125%;
-            width: 46.875%;
+            left: 3%;
+            width: 52%;
+            transform: translateX(calc(var(--mcb-starter-gap) * -0.5));
         }
 
         .mcb-toggle {
-            width: 80%;
-            height: auto;
             display: block;
+        }
+
+        /* Individual image controls (edit variables in .mcb-starter-section) */
+        .mcb-image-adjust {
+            width: var(--mcb-image-width);
+            height: var(--mcb-image-height);
+            transform: translate(var(--mcb-image-x), var(--mcb-image-y)) rotate(var(--mcb-image-rotate));
+            transform-origin: center center;
         }
 
         .starter-block {
             position: absolute;
-            top: -15.42%;
-            right: 3.25%;
-            width: 56.25%;
-            height: 112.5%;
+            top: -17%;
+            right: 1.5%;
+            width: 68%;
+            height: 123%;
+            transform: translateX(calc(var(--mcb-starter-gap) * 0.5));
+        }
+
+        #mcb {
+            transform: translate(
+                calc((var(--mcb-starter-gap) * -0.5) + var(--mcb-endpoint-x)),
+                var(--mcb-endpoint-y)
+            );
+        }
+
+        #starter {
+            transform: translate(
+                calc((var(--mcb-starter-gap) * 0.5) + var(--starter-endpoint-x)),
+                var(--starter-endpoint-y)
+            );
         }
 
         .starter-body {
             display: block;
-            width: 102.11%;
-            /* height: auto; */
-            height: 67%;
+        }
+
+        .starter-image-adjust {
+            width: var(--starter-image-width);
+            height: var(--starter-image-height);
+            transform: translate(var(--starter-image-x), var(--starter-image-y)) rotate(var(--starter-image-rotate));
+            transform-origin: center center;
         }
 
         .starter-handle {
             position: absolute;
-            width: 16.67%;
             height: auto;
-            /* top: 37.04%; */
-            top:32.04%;
-            left: 16.67%;
+        }
+
+        .starter-handle-adjust {
+            width: var(--starter-handle-width);
+            top: var(--starter-handle-top);
+            left: var(--starter-handle-left);
+            transform: translate(var(--starter-handle-x), var(--starter-handle-y)) rotate(var(--starter-handle-rotate));
+            transform-origin: 50% 85%;
         }
 
         .led-row {
@@ -345,7 +413,7 @@
         --meter-card-gap: 24px;
         width: 1140px;  /* widened further for bigger 3-meter layout */
         max-width: 100%;  /* Prevents overflow on small screens */
-        height: 360px;
+        height: 320px;
         margin: 0 auto;  /* Center the panel */
         background-image: url(images/wooden-texture.jpg);
         background-size: cover;
@@ -385,8 +453,8 @@
 
         #voltmeter1-label {
             position: absolute;
-            bottom: -24px;
-            left: calc(50% - (var(--meter-card-width) + var(--meter-card-gap)));
+            bottom: -45px;
+            left: 150%;
             transform: translateX(-50%);
 
             font-size: 13px;
@@ -397,7 +465,7 @@
 
         #voltmeter2-label {
             position: absolute;
-            bottom: -24px;
+            bottom: -45px;
             left: 50%;
             transform: translateX(-50%);
 
@@ -459,7 +527,6 @@
 
         .workspace {
             background: #d7d0c4;
-            border: 3px solid #111;
             padding: clamp(48px, 2vw, 18px);
                 min-height: 382px;  /* Fixed min-height align to rheostat*/
         }
@@ -1123,11 +1190,14 @@
 
         .mcb-label {
             position: absolute;
-            top: 233px;
-            left: 37%;
+            top: var(--mcb-label-top);
+            left: var(--mcb-label-left);
             /* top: calc(100% + clamp(8px, 1.5vw, 12px));
             left: calc((100% / 4) * 0.5); */
-            transform: translateX(-50%);
+            transform: translate(
+                calc(-50% + var(--mcb-label-x)),
+                var(--mcb-label-y)
+            );
             font-size: clamp(0.5rem, 0.9vw, 0.7rem);
             color: #3b2f24;
             font-weight: 700;
@@ -1139,9 +1209,12 @@
 
         .starter-label {
             position: absolute;
-            top: 279px;
-            left: 49%;
-            transform: translateX(-50%);
+            top: var(--starter-label-top);
+            left: var(--starter-label-left);
+            transform: translate(
+                calc(-50% + var(--starter-label-x)),
+                var(--starter-label-y)
+            );
             font-size: clamp(0.5rem, 0.9vw, 0.7rem);
             color: #3b2f24;
             font-weight: 700;
