@@ -8,6 +8,8 @@
  .point-D,
  .point-E,
  .point-G,
+ .point-M,
+ .point-N,
  .point-H,
  .point-I,
  .point-J,
@@ -67,6 +69,8 @@
  .point-D:hover,
  .point-E:hover,
  .point-G:hover,
+ .point-M:hover,
+ .point-N:hover,
  .point-H:hover,
  .point-I:hover,
  .point-J:hover,
@@ -101,6 +105,8 @@
  .point-D:active,
  .point-E:active,
  .point-G:active,
+ .point-M:active,
+ .point-N:active,
  .point-H:active,
  .point-I:active,
  .point-J:active,
@@ -156,28 +162,40 @@
 
  #pointC {
    position: absolute;
-   left: 94px;
-   top: 188px;
- }
+   left: 84px;
+   top: 206px;
+  }
 
- #pointD {
+  #pointD {
    position: absolute;
-   left: 196px;
-   top: 188px;
+   left: 186px;
+   top: 206px;
 
- }
+  }
 
- #pointE {
+ #pointM {
    position: absolute;
-   left: 62px;
-   top: 199px;
+   left: 84px;
+   top: 206px;
  }
 
- #pointG {
+ #pointN {
    position: absolute;
-   left: 168px;
-   top: 199px;
+   left: 186px;
+   top: 206px;
  }
+
+  #pointE {
+   position: absolute;
+   left: 84px;
+   top: 206px;
+  }
+
+  #pointG {
+   position: absolute;
+   left: 186px;
+   top: 206px;
+  }
 
  #pointH {
    position: absolute;
@@ -319,36 +337,54 @@
    position: absolute;
    width: 24px;
    height: 24px;
-   left: 78px;
-   top: 199px;
- }
+   left: 68px;
+   top: 194px;
+  }
 
- .point-D {
+  .point-D {
    font-weight: bold;
    position: absolute;
    width: 24px;
    height: 24px;
-   left: 180px;
-   top: 199px;
- }
+   left: 170px;
+   top: 194px;
+  }
 
- .point-E {
+ .point-M {
    font-weight: bold;
    position: absolute;
    width: 24px;
    height: 24px;
-   left: 370px;
-   top: 198px;
+   left: 68px;
+   top: 194px;
  }
 
- .point-G {
+ .point-N {
    font-weight: bold;
    position: absolute;
    width: 24px;
    height: 24px;
-   left: 478px;
-   top: 198px;
- }
+   left: 170px;
+   top: 194px;
+  }
+
+  .point-E {
+   font-weight: bold;
+   position: absolute;
+   width: 24px;
+   height: 24px;
+   left: 68px;
+   top: 194px;
+  }
+
+  .point-G {
+   font-weight: bold;
+   position: absolute;
+   width: 24px;
+   height: 24px;
+   left: 170px;
+   top: 194px;
+  }
 
  .point-H {
    font-weight: bold;

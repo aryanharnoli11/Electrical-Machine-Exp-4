@@ -141,20 +141,19 @@
           <div class="meters">
 
             <h3 id="voltmeter1-label">
-             DC Ammeter
-            </h3>
-
-            <h3 id="ammter1-label">
              DC Voltmeter
             </h3>
 
+            <h3 id="voltmeter2-label">
+             DC Voltmeter
+            </h3>
 
-            <h3 id="rpm1-label">
-              DIGITAL RPM INDICATOR
+            <h3 id="ammter1-label">
+             DC Ammeter
             </h3>
 
 
-            <div class="meter-card">
+            <div class="meter-card voltmeter-card primary-voltmeter">
 
 
               <img src="images/voltmeter.png" alt="Voltmeter">
@@ -163,33 +162,41 @@
                 <img src="images/needle.png" alt="needle">
               </div>
 
+              <button class="point-C">C</button>
+              <div class="point" id="pointC"></div>
+              <button class="point-D">D</button>
+              <div class="point" id="pointD"></div>
+
             </div>
-            <button class="point-C">C</button>
-            <div class=" point" id="pointC"></div>
-            <button class="point-D">D</button>
-            <div class=" point" id="pointD"></div>
+
+            <div class="meter-card voltmeter-card secondary-voltmeter">
+              <img src="images/voltmeter.png" alt="Voltmeter">
+              <div class="meter-needle2">
+                <img src="images/needle.png" alt="needle">
+              </div>
+              <button class="point-M">M</button>
+              <div class="point" id="pointM"></div>
+              <button class="point-N">N</button>
+              <div class="point" id="pointN"></div>
+            </div>
 
             <div class="meter-card ammeter-card">
               <div class="ammeter-inner">
                 <img src="images/ammeter.png" alt="Ammeter">
 
-
-                <div class=" point" id="pointE"></div> <!-- Left -->
-
-                <div class=" point" id="pointG"></div> <!-- Right -->
                 <div class="meter-needle3">
                   <img src="images/needle.png" alt="needle">
                 </div>
               </div>
+
+              <button class="point-E">E</button>
+              <div class="point" id="pointE"></div>
+
+              <button class="point-G">G</button>
+              <div class="point" id="pointG"></div>
+
             </div>
 
-            <button class="point-E">E</button>
-            <button class="point-G">G</button>
-
-            <div class="meter-card rpm-card">
-              <img src="images/rpm.png" alt="RPM Indicator" class="rpm-image">
-              <div id="rpmDisplay" class="rpm-display">0</div>
-            </div>
           </div>
         </div>
 
@@ -229,6 +236,12 @@
                 <img class="generator-body" src="images/Rotor-body.png" alt="Rotor body">
                 <img class="generator-rotor" id="gr" src="images/Generator-Rotor.png" alt="Generator rotor">
 
+              </div>
+
+              <div class="rpm-box">
+                <h3 class="labeld">DIGITAL RPM INDICATOR</h3>
+                <img src="images/rpm.png" alt="RPM Indicator" class="rpm-image">
+                <div id="rpmDisplay" class="rpm-display">0</div>
               </div>
             </div>
 

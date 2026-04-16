@@ -659,11 +659,13 @@ jsPlumb.ready(function () {
 
   const armatureKnob = document.querySelector(".nob2");
   const voltNeedle = document.querySelector(".meter-needle1");
+  const voltNeedle2 = document.querySelector(".meter-needle2");
   const ampNeedle = document.querySelector(".meter-needle3");
   const rotor = document.getElementById("gr");
   const rpmDisplay = document.getElementById("rpmDisplay");
 
   if (voltNeedle) voltNeedle.style.transition = "transform 0.8s ease-in-out";
+  if (voltNeedle2) voltNeedle2.style.transition = "transform 0.8s ease-in-out";
   if (ampNeedle) ampNeedle.style.transition = "transform 0.6s ease-in-out";
 
   let rotorAngle = 0;
@@ -689,7 +691,8 @@ jsPlumb.ready(function () {
 
     const needleAngles = [-35, -30, -24.5, -21.5, -17.5, -8, -1];
     const voltAngle = needleAngles[stepIndex];
-    voltNeedle.style.transform = `translate(-75%, -82%) rotate(${voltAngle}deg)`;
+    if (voltNeedle) voltNeedle.style.transform = `translate(-75%, -82%) rotate(${voltAngle}deg)`;
+    if (voltNeedle2) voltNeedle2.style.transform = `translate(-75%, -82%) rotate(${voltAngle}deg)`;
 
     if (rpmDisplay) rpmDisplay.textContent = currentRPM;
 
@@ -799,6 +802,7 @@ jsPlumb.ready(function () {
     }
     if (ampNeedle) ampNeedle.style.transform = "translate(-30%, -90%) rotate(-70deg)";
     if (voltNeedle) voltNeedle.style.transform = "translate(-75%, -82%) rotate(-75deg)";
+    if (voltNeedle2) voltNeedle2.style.transform = "translate(-75%, -82%) rotate(-75deg)";
     if (rotor) {
       rotorRunning = false;
       rotorAngle = 0;
@@ -1051,6 +1055,8 @@ jsPlumb.ready(function () {
     pointA: [1, 0.5, 1, 0],
     pointC: [0, 0.5, -1, 0],
     pointD: [1, 0.5, 1, 0],
+    pointM: [0, 0.5, -1, 0],
+    pointN: [1, 0.5, 1, 0],
     pointE: [0, 0.5, -1, 0],
     pointG: [1, 0.5, 1, 0],
     pointH: [0.5, 0.5, 0, 0],
@@ -1955,8 +1961,8 @@ if (skipBtn && iframe) {
       { id: "mcb", selector: ".mcb-label", text: "Purpose: To ensure the safety of equipment and users by tripping during electrical faults." },
       { id: "starter", selector: ".starter-body", text: "Purpose: Limits the starting current of a DC motor by using external armature resistance, which is cut out as the motor speeds up, and provides overload and no-voltage protection." },
       { id: "lamp-load", selector: ".lampboard-dropdown, #number, .lamp-board, .lamp-grid, .lamp-bulb, .lamp-load-label", text: "Lamp Load: Variable resistive bulb bank used to change load; select the number of bulbs to vary current and observe voltage regulation." },
-      { id: "voltmeter", selector: ".meters > .meter-card:nth-of-type(1)", text: "Purpose: To measure the armature voltage of the DC shunt motor." },
-      { id: "ammeter", selector: ".meters > .meter-card:nth-of-type(4)", text: "Purpose: To measure the field current drawn by the DC shunt motor." },
+      { id: "voltmeter", selector: ".primary-voltmeter, .secondary-voltmeter, .meter-needle1, .meter-needle2", text: "Purpose: To measure the armature voltage of the DC shunt motor." },
+      { id: "ammeter", selector: ".ammeter-card, .meter-needle3", text: "Purpose: To measure the field current drawn by the DC shunt motor." },
       { id: "rpm-display", selector: ".rpm-image, .rpm-display, #rpmDisplay", text: "Purpose: An RPM indicator measures the rotational speed of the motor shaft in revolutions per minute. It helps in monitoring and analyzing the speed performance of the DC machine under different operating conditions." },
       { id: "field-rheostat", selector: ".rheostat-img-1, .nob1", text: "Purpose: The field resistance is set once and kept constant so that the flux remains constant, so any change in speed is only due to the change in armature voltage caused by the external added resistance." },
       { id: "armature-rheostat", selector: ".rheostat-img-2, .nob2", text: "Purpose: By varying the armature resistance causes a voltage drop in the armature circuit, allowing control of the motor speed below its rated speed." },
