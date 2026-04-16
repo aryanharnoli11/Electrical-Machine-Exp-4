@@ -453,8 +453,8 @@
 
         #voltmeter1-label {
             position: absolute;
-            bottom: -45px;
-            left: 150%;
+            bottom: -50px;
+            left: 16%;
             transform: translateX(-50%);
 
             font-size: 13px;
@@ -465,7 +465,7 @@
 
         #voltmeter2-label {
             position: absolute;
-            bottom: -45px;
+            bottom: -50px;
             left: 50%;
             transform: translateX(-50%);
 
@@ -477,8 +477,8 @@
 
         #ammter1-label {
             position: absolute;
-            bottom: -24px;
-            left: calc(50% + (var(--meter-card-width) + var(--meter-card-gap)));
+            bottom: -50px;
+            left: 85%;
             transform: translateX(-50%);
             font-size: 13px;
             letter-spacing: 0.06em;
@@ -879,7 +879,7 @@
         position: relative;
         width: 100%;
         color: #f4f8ff;
-        border: 1px solid rgba(118, 139, 172, 0.7);
+        border: 1px solid rgba(232, 178, 63, 0.7);
         padding: 10px 18px;
         border-radius: 999px;
         font-size: 16px;
@@ -1178,15 +1178,6 @@
             transform: translate(-36%, -95%) rotate(-71deg);
         }
 
-        /* .meter-needle4 {
-            position: absolute;
-            width: 35px;
-            height: auto;
-            left: 47%;
-            top: 54%;
-            transform-origin: 50% 90%;
-            transform: translate(-30%, -90%) rotate(-68deg);
-        } */
 
         .mcb-label {
             position: absolute;
@@ -1397,18 +1388,6 @@
             z-index: 5;
             cursor: grab;
         }
-
-        /* .nob2 {
-        position: absolute;
-        left: 15%;
-        top: -10%;
-        transform: translate(-50%, -50%);
-        width: clamp(34px, 4vw, 46px);
-        height: clamp(28px, 3vw, 36px);
-        object-fit: contain;
-        z-index: 5;
-        } */
-
 
         .instructions-wrapper {
             position: relative;
