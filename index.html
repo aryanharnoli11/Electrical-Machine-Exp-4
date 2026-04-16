@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Experiment 4</title>
+
+  <script src="https://unpkg.com/jsplumb/dist/js/jsplumb.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="style2.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+</head>
+
+<body>
+<!-- COMPONENTS MODAL (AUTO OPEN) -->
+<div id="componentsModal" class="components-overlay is-hidden"
+     role="dialog"
+     aria-modal="true"
+     aria-label="Experiment Components">
+
+  <div class="components-overlay__backdrop" data-components-close></div>
+
+  <div class="components-dialog" role="document">
+    <div class="components-dialog__header">
+      <div class="components-dialog__title">Components</div>
+
+      
+
+      <div class="components-dialog__actions">
+
+  <!-- TAP TO ENABLE AUDIO -->
+ <button type="button"
+        id="componentsAudioBtn"
+        class="components-audio-btn"
+        aria-pressed="false">
+  Tap to enable audio
+</button>
+
+
+  <!-- SKIP -->
+  <button type="button"
+          id="skipComponentsBtn"
+          class="components-skip-btn">
+    Skip
+  </button>
+
+
+        <button type="button"
+                class="components-close-btn"
+                data-components-close
+                aria-label="Close Components">
+          &times;
+        </button>
+  
+
+</div>
+
+    </div>
+<div class="components-dialog__body">
+      <iframe
+        title="Experiment components"
+        src="components_window.html?embed=1"
+        referrerpolicy="no-referrer"
+        allow="autoplay"
+        loading="eager"
+      ></iframe>
+    </div>
+  </div>
+</div>
+
+
+
+
+  <main class="panel">
+    <section class="top-row">
+      <aside class="left-column">
+        <div class="mcb-starter-section">
+          <div class="mcb-block">
+            <img class="mcb-toggle" src="images/mcb-off.png" alt="MCB">
+            <h3 class="mcb-label">DC SUPPLY</h3>
+          </div>
+          <!-- MCB -->
+          <div id="mcb">
+            <button class="point-R">R</button>
+            <div class="point" id="pointR"></div>
+
+            <button class="point-B">B</button>
+            <div class="point" id="pointB"></div>
+          </div>
+
+          <!-- Starter -->
+          <div id="starter">
+            <!-- <div class="point" id="starter-t1"></div>
+  <div class="point" id="starter-t2"></div> -->
+            <button class="point-L">L</button>
+            <div class="point" id="pointL"></div>
+
+            <button class="point-F">F</button>
+            <div class="point" id="pointF"></div>
+
+            <button class="point-A">A</button>
+            <div class="point" id="pointA"></div>
+          </div>
+
+          <div class="starter-block">
+            <h3 class="starter-label">
+              Starter
+            </h3>
+            <img class="starter-body" src="images/starter.png" alt="Starter body">
+            <img class="starter-handle" src="images/starter-handle.png" alt="starter-handle">
+
+          </div>
+        </div>
+        <div class="rheostat">
+          <h3 class="rheostat-label1">FIELD RHEOSTAT</h3>
+          <img class="rheostat-img-1" src="images/Rheostat.png" alt="Rheostat">
+          <img class="nob1" src="images/nob.png" alt="nob">
+          <div class="point" id="pointH"></div>
+          <div class="point" id="pointI"></div>
+          <button class="point-H">H</button>
+          <button class="point-I">I</button>
+        </div>
+        <div class="rheostat">
+          <h3 class="rheostat-label2">ARMATURE RHEOSTAT</h3>
+          <img class="rheostat-img-2" src="images/Rheostat.png" alt="Rheostat">
+          <img class="nob2" src="images/nob.png" alt="nob">
+          <div class="point" id="pointJ"></div>
+          <div class="point" id="pointK"></div>
+          <button class="point-J">J</button>
+          <button class="point-K">K</button>
+        </div>
+      </aside>
+
+      <section class="center-column">
+
+
+
+        <div class="meter-panel">
+          <div class="meters">
+
+            <h3 id="voltmeter1-label">
+             DC Ammeter
+            </h3>
+
+            <h3 id="ammter1-label">
+             DC Voltmeter
+            </h3>
+
+
+            <h3 id="rpm1-label">
+              DIGITAL RPM INDICATOR
+            </h3>
+
+
+            <div class="meter-card">
+
+
+              <img src="images/voltmeter.png" alt="Voltmeter">
+
+              <div class="meter-needle1">
+                <img src="images/needle.png" alt="needle">
+              </div>
+
+            </div>
+            <button class="point-C">C</button>
+            <div class=" point" id="pointC"></div>
+            <button class="point-D">D</button>
+            <div class=" point" id="pointD"></div>
+
+            <div class="meter-card ammeter-card">
+              <div class="ammeter-inner">
+                <img src="images/ammeter.png" alt="Ammeter">
+
+
+                <div class=" point" id="pointE"></div> <!-- Left -->
+
+                <div class=" point" id="pointG"></div> <!-- Right -->
+                <div class="meter-needle3">
+                  <img src="images/needle.png" alt="needle">
+                </div>
+              </div>
+            </div>
+
+            <button class="point-E">E</button>
+            <button class="point-G">G</button>
+
+            <div class="meter-card rpm-card">
+              <img src="images/rpm.png" alt="RPM Indicator" class="rpm-image">
+              <div id="rpmDisplay" class="rpm-display">0</div>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="workspace">
+
+          <div class="equipment-row">
+            <div class="assembly">
+
+              <div class="motor-box">
+                <h3 class="labeld">DC SHUNT MOTOR
+
+                </h3>
+                <img src="images/shuntmotor.png" alt="Motor">
+
+                <div>
+                  <button class="point-A1">A1</button>
+                  <button class="point-F1">F1</button>
+
+                  <div class="point" id="pointA1"></div>
+                  <div class="point" id="pointF1"></div>
+                </div>
+
+                <div>
+
+                  <button class="point-A2">A2</button>
+                  <button class="point-F2">F2</button>
+
+                  <div class="point" id="pointA2"></div>
+                  <div class="point" id="pointF2"></div>
+                </div>
+              </div>
+
+
+              <div class="generator-box">
+                <h3 class="labeld">Rotor view</h3>
+                <img class="generator-body" src="images/Rotor-body.png" alt="Rotor body">
+                <img class="generator-rotor" id="gr" src="images/Generator-Rotor.png" alt="Generator rotor">
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="center-actions">
+
+        </div>
+
+
+      </section>
+      <aside class="right-column">
+        <div class="pill-stack" id="pill-stack">
+          <div class="instructions-wrapper">
+
+            <button class="pill-btn instructions-btn">
+              <i class="fa-solid fa-circle-info" style="font-size:16px;"></i>&nbsp;&nbsp;
+              <span>Instructions</span>
+            </button>
+            <!-- <button class="pill-btn instructions-btn">Instructions</button> -->
+
+            <div class="instructions-panel">
+              <h4>AI Guide: To use this feature, click on the “AI Guide” button. The AI Guide will assist you in performing the simulation accurately at each step.</h4><br>
+              <h4><strong>STEP 1:</strong> Make connections as per the instructions given below:</h4>
+              <table class="conn-table">
+                <tr>
+                  <th><strong>From</strong></th>
+                  <td>R</td>
+                  <td>B</td>
+                  <td>B</td>
+                  <td>B</td>
+                  <td>F</td>
+                  <td>A</td>
+                  <td>G</td>
+                  <td>I</td>
+                  <td>C</td>
+                  <td>A1</td>
+                  <td>K</td>
+                </tr>
+                <tr>
+                  <th><strong>To</strong></th>
+                  <td>L</td>
+                  <td>D</td>
+                  <td>A2</td>
+                  <td>F2</td>
+                  <td>E</td>
+                  <td>J</td>
+                  <td>H</td>
+                  <td>F1</td>
+                  <td>A1</td>
+                  <td>K</td>
+                  <td>C</td>
+                </tr>
+              </table><br>
+              <h4>Note: If the wire is wrongly connected, click on the label number to remove the wire.</h4><br>
+              <h4>Note: Click on the “Auto Connect” button to make all the connections automatically.</h4><br>
+              <p><strong>STEP 2:</strong> Click on <b>"Check"</b>button to check the connections.</p><br>
+              <p><strong>STEP 3:</strong> If connections are correct, turn ON the DC supply</p><br>
+              <p><strong>STEP 4:</strong> Now, move the starter handle from left to right</p><br>
+              <p><strong>STEP 5:</strong> First, set the field resistance by moving the field rheostat knob.
+              </p><br>
+              <p><strong>STEP 6:</strong> Now, click on the <b>“Add to Table”</b> button to add readings to the observation table</p><br>
+              <p><strong>STEP 7:</strong> Now vary the armature resistance by moving the armature rheostat knob to take different readings.</p><br>
+              <p><strong>STEP 8:</strong>Repeat steps 6 to 7 to add more readings in the observation table.</p><br>
+              <p><strong>STEP 9:</strong>  Click on the <b>"Graph"</b> button to generate a Graph.</p><br>
+              <p><strong>STEP 10:</strong> Click on the <b>“Report”</b> button to generate a summarised report of the simulation.</p><br>
+              <p><strong>STEP 11:</strong> Click on the <b>“Print”</b> button to print the simulation.</p><br>
+              <p><strong>STEP 12:</strong> Click on the<b>“Reset”</b> button to reset the simulation.</p><br>
+            </div>
+          </div>
+
+
+          <button class="pill-btn" id="checkBtn">
+            <i class="fa-solid fa-check"></i>&nbsp;&nbsp;
+            <span>Check</span>
+          </button>
+
+
+          <button class="pill-btn speak-btn" type="button" aria-pressed="false"
+            aria-label="Start Speaking / Tap To Listen" title="Start Speaking">
+            <span class="speak-btn__icon" aria-hidden="true">
+              <svg class="speak-btn__svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round" focusable="false" aria-hidden="true">
+                <path d="M11 5L6 9H3v6h3l5 4V5z" />
+                <path class="speak-btn__wave wave-1" d="M15.5 8.5a4 4 0 010 7" />
+                <path class="speak-btn__wave wave-2" d="M17.8 6.2a7 7 0 010 11.6" />
+                <path class="speak-btn__wave wave-3" d="M20.1 3.9a10 10 0 010 16.2" />
+              </svg>
+            </span>
+            <span class="speak-btn__label">Tap To Listen</span>
+          </button>
+
+          <!-- <button class="pill-btn">Auto Connect</button> -->
+
+          <button class="pill-btn" id="auto">
+            <i class="fa-solid fa-link" style="font-size:16px;"></i>&nbsp;&nbsp;
+            <span>Auto Connect </span>
+          </button>
+
+          <!-- <button class="pill-btn">Add Table</button></br> -->
+
+          <button class="pill-btn obs-add-btn" id="addTableBtn" type="button">
+            <i class="fa-solid fa-table" style="font-size:16px;"></i>&nbsp;&nbsp;
+            <span>Add To Table</span>
+          </button>
+
+
+          <section class="data-section">
+            <!-- <h3 class="obs-title">OBSERVATION TABLE</h3>
+  <div id="observation-container"></div> -->
+
+            <div class="data-table-wrapper">
+              <h3 class="obs-title">OBSERVATION TABLE</h3>
+              <div id="observation-container"></div>
+            </div>
+
+          </section>
+
+
+          <!-- <section class="data-section">
+       <h3 class="obs-title">OBSERVATION TABLE</h3>
+        <div class="data-table">
+            <div class="table-header">
+               
+                <span>Sr No.</span>
+                <span>Current (A)</span>
+                <span>Voltage (V)</span>
+            </div>
+            <div class="table-row"><span></span><span></span><span></span></div>
+            <div class="table-row"><span></span><span></span><span></span></div>
+            <div class="table-row"><span></span><span></span><span></span></div>
+            <div class="table-row"><span></span><span></span><span></span></div>
+            <div class="table-row"><span></span><span></span><span></span></div>
+            <div class="table-row"><span></span><span></span><span></span></div>
+            <div class="table-row"><span></span><span></span><span></span></div>
+            
+            
+        </div>
+    </div>
+    </section> -->
+      </aside>
+
+    </section>
+  </main>
+  
+<footer class="panel-footer">
+    <section class="graph-section">
+
+      <div class="graph-header">
+        <h3>Output Graph</h3>
+      </div>
+
+      <div class="graph-body">
+
+        <!-- GRAPH AREA -->
+        <div class="graph-canvas">
+          <div class="graph-bars" id="graphBars"></div>
+          <div id="graphPlot"></div>
+        </div>
+
+        <!-- RIGHT SIDE BUTTON COLUMN -->
+        <div class="graph-actions">
+          <button class="pill-btn" id="plotGraphBtn">
+            <i class="fa-solid fa-chart-area" style="font-size:16px;"></i>&nbsp;&nbsp;
+            <span>Graph</span>
+          </button>
+
+
+
+         <!-- <button class="pill-btn">Report</button> -->
+          <button class="pill-btn" id="reportBtn">
+            <i class="fa-solid fa-file" style="font-size:16px;"></i>&nbsp;&nbsp;
+            <span>Report</span>
+          </button>
+
+
+          <!-- <button class="pill-btn">Reset</button></br> -->
+          <button class="pill-btn" id="resetBtn">
+            <i class="fa-solid fa-arrows-rotate" style="font-size:16px;"></i>&nbsp;&nbsp;
+            <span>Reset</span>
+          </button>
+
+
+
+          <!-- <button class="pill-btn">Print</button> -->
+
+          <button class="pill-btn" id="printBtn">
+            <i class="fa-solid fa-print" style="font-size:16px;"></i>&nbsp;&nbsp;
+            <span>Print</span>
+          </button></br>
+        </div>
+
+      </div>
+
+    </section>
+     <div  class="panel-footer__copyright">&copy; 2026 Virtual Labs IIT Roorkee</div>
+  </footer>
+
+   <div class="chatbot-widget">
+    <div class="chatbot-panel" data-chat-url="https://vlab-exp-2.netlify.app/">
+  <div class="chatbot-panel-header">
+  <div>
+    <p class="chatbot-panel-title">Virtual Lab Assistant</p>
+    <p class="chatbot-panel-caption">Ask anything about this experiment</p>
+  </div>
+
+  <div class="chatbot-panel-actions">
+    <button type="button" class="chatbot-panel-close" aria-label="Close chatbot">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+</div>
+
+      <div class="chatbot-panel-body">
+        <div class="chatbot-panel-placeholder">Loading area for your chatbot. Update the <strong>data-chat-url</strong> to match your deployment.</div>
+        <iframe title="Chatbot assistant" referrerpolicy="no-referrer" scrolling="no"></iframe>
+      </div>
+    </div>
+
+    <div class="chatbot-launcher-row">
+      <button type="button" class="chatbot-launcher" aria-expanded="false" aria-label="Open chatbot assistant">
+        <span class="chatbot-hint-bubble">
+          <span class="chatbot-hint-dot">Hi</span>
+          Ask anything about this experiment
+        </span>
+        <img src="images/chatbot.png" alt="" aria-hidden="true" class="chatbot-launcher-image">
+      </button>
+      <button
+        type="button"
+        class="components-launcher"
+        data-open-components
+        aria-label="Open components"
+        title="Components"
+      >
+         <img src="images/component.png" alt="" class="components-launcher__icon" aria-hidden="true">
+      </button>
+    </div>
+  </div>
+  
+  <!-- ALERT MODAL -->
+  <div id="warningModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalMessage">
+    <div class="modal-box danger" role="document">
+      <h2 id="modalTitle">Alert</h2>
+      <p id="modalMessage"></p>
+      <button type="button" class="modal-close-btn" data-modal-close>OK</button>
+    </div>
+  </div>
+
+  <audio id="alertSound" preload="auto"></audio>
+
+  <audio id="chatbot-notification-audio" preload="auto">
+    <source src="audio/live-chat-353605.mp3" type="audio/mpeg">
+  </audio>
+</body>
+
+<script src="progress_tracker.js"></script>
+
+
+  <script src="script.js"></script>
+
+</body>
+
+</html>
