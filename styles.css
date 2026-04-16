@@ -341,9 +341,11 @@
         }
 
     .meter-panel {
-        width: 1040px;  /* widened for 3 larger meters */
+        --meter-card-width: 300px;
+        --meter-card-gap: 24px;
+        width: 1140px;  /* widened further for bigger 3-meter layout */
         max-width: 100%;  /* Prevents overflow on small screens */
-        height: 330px;
+        height: 360px;
         margin: 0 auto;  /* Center the panel */
         background-image: url(images/wooden-texture.jpg);
         background-size: cover;
@@ -360,7 +362,7 @@
         display: flex;
         flex-direction: row;
         flex-wrap: nowrap;
-        gap: 18px;
+        gap: 24px;
         width: 100%;
         height: 84%;
         align-items: flex-start;
@@ -370,8 +372,8 @@
 
         .meter-card {
         position: relative;
-        width: 270px;
-        height: 220px;
+        width: 300px;
+        height: 248px;
         padding: 8px;  /* Fixed padding (was clamp) */
         border-radius: 6px;
         box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.45), 0 6px 10px rgba(0, 0, 0, 0.2);
@@ -383,32 +385,35 @@
 
         #voltmeter1-label {
             position: absolute;
-            bottom: -54px;
-            left: 16%;
+            bottom: -24px;
+            left: calc(50% - (var(--meter-card-width) + var(--meter-card-gap)));
             transform: translateX(-50%);
 
-            font-size: 14px;
+            font-size: 13px;
+            letter-spacing: 0.06em;
             white-space: nowrap;
             text-align: center;
         }
 
         #voltmeter2-label {
             position: absolute;
-            bottom: -54px;
+            bottom: -24px;
             left: 50%;
             transform: translateX(-50%);
 
-            font-size: 14px;
+            font-size: 13px;
+            letter-spacing: 0.06em;
             white-space: nowrap;
             text-align: center;
         }
 
         #ammter1-label {
             position: absolute;
-            bottom: -54px;
-            left: 84%;
+            bottom: -24px;
+            left: calc(50% + (var(--meter-card-width) + var(--meter-card-gap)));
             transform: translateX(-50%);
-            font-size: 14px;
+            font-size: 13px;
+            letter-spacing: 0.06em;
             white-space: nowrap;
             text-align: center;
         }
@@ -1079,7 +1084,7 @@
 
         .meter-needle1 {
             position: absolute;
-            width: 35px;
+            width: 40px;
             height: auto;
             left: 55%;
             top: 50%;
@@ -1089,7 +1094,7 @@
 
         .meter-needle2 {
             position: absolute;
-            width: 35px;
+            width: 40px;
             height: auto;
             left: 55%;
             top: 50%;
@@ -1098,7 +1103,7 @@
         }
         .meter-needle3 {
             position: absolute;
-            width: 35px;
+            width: 40px;
             height: auto;
             left: 49%;
             top: 52%;

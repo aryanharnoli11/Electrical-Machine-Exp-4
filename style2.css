@@ -160,42 +160,42 @@
    top: 185px;
  }
 
- #pointC {
-   position: absolute;
-   left: 84px;
-   top: 206px;
-  }
+#pointC {
+  position: absolute;
+  left: 22%;
+  top: 90%;
+ }
 
   #pointD {
-   position: absolute;
-   left: 186px;
-   top: 206px;
+  position: absolute;
+  left: 78%;
+  top: 90%;
 
   }
 
- #pointM {
-   position: absolute;
-   left: 84px;
-   top: 206px;
+#pointM {
+  position: absolute;
+  left: 22%;
+  top: 90%;
+}
+
+#pointN {
+  position: absolute;
+  left: 78%;
+  top: 90%;
+}
+
+ #pointE {
+  position: absolute;
+  left: 22%;
+  top: 90%;
  }
 
- #pointN {
-   position: absolute;
-   left: 186px;
-   top: 206px;
+ #pointG {
+  position: absolute;
+  left: 73.5%;
+  top: 90%;
  }
-
-  #pointE {
-   position: absolute;
-   left: 84px;
-   top: 206px;
-  }
-
-  #pointG {
-   position: absolute;
-   left: 186px;
-   top: 206px;
-  }
 
  #pointH {
    position: absolute;
@@ -332,59 +332,59 @@
    z-index: 10;
  }
 
- .point-C {
-   font-weight: bold;
-   position: absolute;
-   width: 24px;
-   height: 24px;
-   left: 68px;
-   top: 194px;
-  }
-
-  .point-D {
-   font-weight: bold;
-   position: absolute;
-   width: 24px;
-   height: 24px;
-   left: 170px;
-   top: 194px;
-  }
-
- .point-M {
-   font-weight: bold;
-   position: absolute;
-   width: 24px;
-   height: 24px;
-   left: 68px;
-   top: 194px;
+.point-C {
+  font-weight: bold;
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: calc(22% - 16px);
+  top: 91%;
  }
 
- .point-N {
-   font-weight: bold;
-   position: absolute;
-   width: 24px;
-   height: 24px;
-   left: 170px;
-   top: 194px;
-  }
+ .point-D {
+  font-weight: bold;
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: calc(78% - 16px);
+  top: 91%;
+ }
 
-  .point-E {
-   font-weight: bold;
-   position: absolute;
-   width: 24px;
-   height: 24px;
-   left: 68px;
-   top: 194px;
-  }
+.point-M {
+  font-weight: bold;
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: calc(22% - 16px);
+  top: 91%;
+}
 
-  .point-G {
-   font-weight: bold;
-   position: absolute;
-   width: 24px;
-   height: 24px;
-   left: 170px;
-   top: 194px;
-  }
+.point-N {
+  font-weight: bold;
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: calc(78% - 16px);
+  top: 91%;
+ }
+
+ .point-E {
+  font-weight: bold;
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: calc(22% - 16px);
+  top: 91%;
+ }
+
+ .point-G {
+  font-weight: bold;
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: calc(78% - 16px);
+  top: 91%;
+ }
 
  .point-H {
    font-weight: bold;
