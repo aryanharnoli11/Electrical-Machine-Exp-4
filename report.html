@@ -177,6 +177,7 @@
       font-weight: 700;
       font-size: 14px;
       letter-spacing: 0.3px;
+      white-space: nowrap;
     }
 
     tr:nth-child(even) td {
@@ -349,14 +350,15 @@
     <table>
       <thead>
         <tr>
-          <th>S.No.</th>
-          <th>Armature Voltage (V)</th>
-          <th>Speed (RPM)</th>
+          <th>S NO.</th>
+          <th>Armature Resistance</th>
+          <th>Armature Voltage</th>
+          <th>Speed</th>
         </tr>
       </thead>
       <tbody id="reportTableBody">
         <tr>
-          <td colspan="3" class="no-data">No readings recorded.</td>
+          <td colspan="4" class="no-data">No readings recorded.</td>
         </tr>
       </tbody>
     </table>
@@ -419,9 +421,11 @@
 
   if (tableData.length > 0) {
     tbody.innerHTML = tableData.map(function(row) {
+      var resistance = (row.resistance !== undefined && row.resistance !== null) ? row.resistance : "-";
       return (
         "<tr>" +
           "<td>" + row.count   + "</td>" +
+          "<td>" + resistance  + "</td>" +
           "<td>" + row.voltage + "</td>" +
           "<td>" + row.rpm     + "</td>" +
         "</tr>"

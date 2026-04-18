@@ -97,6 +97,7 @@ jsPlumb.ready(function () {
 
   let currentVoltage = 0;
   let currentRPM = 0;
+  let currentArmatureResistance = 0;
 
   let currentStepIndex = 0;
   let isPreparingPrint = false;
@@ -491,7 +492,8 @@ jsPlumb.ready(function () {
     <table class="data-table">
       <thead>
         <tr>
-          <th>S No.</th>
+          <th>S NO.</th>
+          <th>Armature Resistance (Ω)</th>
           <th>Armature Voltage (V)</th>
           <th>Speed (RPM)</th>
         </tr>
@@ -501,6 +503,11 @@ jsPlumb.ready(function () {
     </table>
   `;
     observationBody = document.getElementById("observationBody");
+  }
+
+  function formatArmatureResistance(value) {
+    if (!Number.isFinite(value)) return "-";
+    return Number.isInteger(value) ? String(value) : value.toFixed(1);
   }
 
   function addObservationRow() {
@@ -518,18 +525,15 @@ jsPlumb.ready(function () {
       return;
     }
 
-    const rows = observationBody.querySelectorAll("tr");
-    for (let row of rows) {
-      const cells = row.querySelectorAll("td");
-      if (cells.length === 3) {
-        const v = parseInt(cells[1].textContent);
-        const r = parseInt(cells[2].textContent);
-        if (v === currentVoltage && r === currentRPM) {
-          showPopup("This reading is already added to the table.", "Duplicate Entry");
-          guidedSpeak("audiosimulation/duplicatereading.wav");
-          return;
-        }
-      }
+    const duplicateExists = graphReadings.some(reading =>
+      reading.voltage === currentVoltage &&
+      reading.rpm === currentRPM &&
+      reading.resistance === currentArmatureResistance
+    );
+    if (duplicateExists) {
+      showPopup("This reading is already added to the table.", "Duplicate Entry");
+      guidedSpeak("audiosimulation/duplicatereading.wav");
+      return;
     }
 
     const placeholder = observationBody.querySelector(".placeholder-row");
@@ -539,12 +543,17 @@ jsPlumb.ready(function () {
     const tr = document.createElement("tr");
     tr.innerHTML = `
     <td>${serial}</td>
+    <td>${formatArmatureResistance(currentArmatureResistance)}</td>
     <td>${currentVoltage}</td>
     <td>${currentRPM}</td>
   `;
     observationBody.appendChild(tr);
 
-    graphReadings.push({ voltage: currentVoltage, rpm: currentRPM });
+    graphReadings.push({
+      resistance: currentArmatureResistance,
+      voltage: currentVoltage,
+      rpm: currentRPM
+    });
     onReadingAdded(graphReadings.length);
     updateGraphButtonState();
   }
@@ -735,17 +744,18 @@ jsPlumb.ready(function () {
   let rotorSpeed = 0;
 
   const armatureTable = [
-    { voltage: 132, rpm: 1085 },
-    { voltage: 139, rpm: 1170 },
-    { voltage: 152, rpm: 1301 },
-    { voltage: 166, rpm: 1400 },
-    { voltage: 176, rpm: 1507 },
-    { voltage: 198, rpm: 1690 },
-    { voltage: 220, rpm: 1889 }
+    { resistance: 75, voltage: 132, rpm: 1085 },
+    { resistance: 62.5, voltage: 139, rpm: 1170 },
+    { resistance: 50, voltage: 152, rpm: 1301 },
+    { resistance: 37.5, voltage: 166, rpm: 1400 },
+    { resistance: 25, voltage: 176, rpm: 1507 },
+    { resistance: 12.5, voltage: 198, rpm: 1690 },
+    { resistance: 0, voltage: 220, rpm: 1889 }
   ];
 
   function updateVoltmeterByArmature(stepIndex) {
     const row = armatureTable[stepIndex];
+    currentArmatureResistance = row.resistance;
     currentVoltage = row.voltage;
     currentRPM = row.rpm;
     rotorSpeed = ARMATURE_ROTATION_SPEED[stepIndex];
@@ -847,6 +857,7 @@ jsPlumb.ready(function () {
 
   function turnMCBOff(reason = "") {
     completedByAutoConnect = false;
+    currentArmatureResistance = 0;
     currentRPM = 0;
     if (rpmDisplay) rpmDisplay.textContent = "0";
     const fieldKnob = document.querySelector(".nob1");
@@ -1205,17 +1216,17 @@ jsPlumb.ready(function () {
   }
 
   const WIRE_CURVE_OVERRIDES = new Map([
-    [connectionKey("pointR", "pointL"), -70],
+    [connectionKey("pointR", "pointC"), 120],
     [connectionKey("pointB", "pointD"), -70],
-    [connectionKey("pointB", "pointA2"), 80],
-    [connectionKey("pointB", "pointF2"), -160],
-    [connectionKey("pointA", "pointJ"), 160],
-    [connectionKey("pointG", "pointH"), 150],
-    [connectionKey("pointF", "pointE"), -60],
+    [connectionKey("pointR", "pointL"), -70],
+    [connectionKey("pointF", "pointH"), -60],
     [connectionKey("pointI", "pointF1"), 100],
-    [connectionKey("pointC", "pointA1"), 20],
-    [connectionKey("pointA1", "pointK"), -120],
-    [connectionKey("pointK", "pointC"), -140]
+    [connectionKey("pointA2", "pointF2"), -150],
+    [connectionKey("pointA", "pointJ"), 160],
+    [connectionKey("pointK", "pointE"), -120],
+    [connectionKey("pointG", "pointA1"), -120],
+    [connectionKey("pointM", "pointA1"), 60],
+    [connectionKey("pointN", "pointA2"), 80]
   ]);
 
   function getWireCurvinessForConnection(sourceId, targetId) {
@@ -1254,17 +1265,17 @@ jsPlumb.ready(function () {
   let completedByAutoConnect = false;
 
   const requiredPairs = [
-    "pointR-pointL",
+    "pointR-pointC",
     "pointB-pointD",
-    "pointB-pointA2",
-    "pointB-pointF2",
-    "pointF-pointE",
-    "pointA-pointJ",
-    "pointG-pointH",
+    "pointR-pointL",
+    "pointF-pointH",
     "pointI-pointF1",
-    "pointC-pointA1",
-    "pointA1-pointK",
-    "pointK-pointC",
+    "pointA2-pointF2",
+    "pointA-pointJ",
+    "pointK-pointE",
+    "pointG-pointA1",
+    "pointM-pointA1",
+    "pointN-pointA2",
   ];
 
   function areAllConnectionsCorrect() {
@@ -1479,13 +1490,29 @@ jsPlumb.ready(function () {
         const [a, b] = pair.split("-");
         return !seenKeys.has(connectionKey(a, b));
       });
+      const endpointLabelMap = {
+        R: "P1",
+        B: "P2",
+        C: "G",
+        D: "H",
+        M: "I",
+        N: "J",
+        E: "K",
+        G: "M",
+        H: "D",
+        I: "E",
+        J: "B",
+        K: "C",
+      };
+      function mapEndpointLabel(id) {
+        const base = id.replace(/^point/i, "").toUpperCase();
+        return endpointLabelMap[base] || base;
+      }
       function toLabel(id) {
-        return id
-          .replace(/^point/i, "Point ")
-          .replace(/([A-Za-z])(\d+)/g, "$1 $2");
+        return `Point ${mapEndpointLabel(id).replace(/([A-Za-z])(\d+)/g, "$1 $2")}`;
       }
       function toSpeech(id) {
-        return id.replace(/^point/i, "").replace(/([A-Za-z]+)(\d+)/g, "$1 $2").toUpperCase();
+        return mapEndpointLabel(id).replace(/([A-Za-z]+)(\d+)/g, "$1 $2").toUpperCase();
       }
       const firstIllegal = illegalRaw[0] || null;
       const firstMissing = missingPairs[0] || null;
@@ -1759,7 +1786,12 @@ jsPlumb.ready(function () {
       localStorage.setItem("reportDuration", durationText);
       localStorage.setItem("experimentReport", JSON.stringify(graphReadings));
       localStorage.setItem("tableData", JSON.stringify(
-        graphReadings.map((row, index) => ({ count: index + 1, voltage: row.voltage, rpm: row.rpm }))
+        graphReadings.map((row, index) => ({
+          count: index + 1,
+          resistance: row.resistance,
+          voltage: row.voltage,
+          rpm: row.rpm
+        }))
       ));
 
       // ✅ Sirf flag save karo — progress report unlock ke liye
@@ -2135,4 +2167,3 @@ if (skipBtn && iframe) {
     setup();
   }
 })();
-
