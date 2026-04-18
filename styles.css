@@ -46,6 +46,20 @@
         margin: 0;
     }
 
+    .main-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        overflow: visible;
+    }
+
+    .simulation-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        overflow: visible;
+    }
+
     .panel {
         width: 1800px;
         min-width: 1800px;
@@ -89,6 +103,7 @@
         border-right: none;
         border-right: 3px solid #111;
         display: flex;
+       
         flex-direction: column;
         gap: 50px;  /* Fixed gap (was clamp) */
         position: relative;
@@ -262,7 +277,14 @@
             position: absolute;
             top: 245px;
             pointer-events: none;  /* ✅ Makes label invisible to clicks */
-        user-select: none;
+         user-select: none;
+        }
+
+        .rpm-box .labeld {
+            left: 50%;
+            transform: translateX(-50%);
+            width: max-content;
+            white-space: nowrap;
         }
 
         .terminal {
@@ -527,8 +549,8 @@
 
         .workspace {
             background: #d7d0c4;
-            padding: clamp(48px, 2vw, 18px);
-                min-height: 382px;  /* Fixed min-height align to rheostat*/
+            padding: clamp(12px, 1.6vw, 18px);
+            min-height: 280px;  /* Fixed min-height align to rheostat*/
         }
 
         .equipment-row {
@@ -837,7 +859,7 @@
     .controls-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(170px, 1fr));
-        gap: 18px 18px;
+        gap: 35px 18px;
         width: 100%;
         min-width: 358px;
         max-width: 420px;
@@ -2517,344 +2539,129 @@
     animation: speakGlowPulse 1.35s ease-in-out infinite;
     }
 /* ============================================================
-   PRINT FIX — Replace the entire @media print block in styles.css
-   with this corrected version
+   PRINT LAYOUT
    ============================================================ */
-/* ============================================================
-   PRINT FIXES — Replace the @media print block in styles.css
-   with this corrected version (3 targeted fixes applied)
-   ============================================================ */
+:root {
+    --print-scale: 0.8;
+    --print-content-width: 1800px;
+    --print-horizontal-offset: 0px;
+}
 
 @media print {
-
-    /* ── BUTTON SIZES ── */
-    .pill-btn {
-        width: 100% !important;
-        height: 48px !important;
-        padding: 0 18px !important;
-        font-size: 15px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        white-space: nowrap !important;
-    }
-
-    .right-column .pill-stack {
-        width: 280px !important;
-    }
-
-    .pill-stack {
-        width: 280px !important;
-    }
-
     @page {
         size: A4 landscape;
-        margin: 5mm;
+        margin: 10mm;
+    }
+
+    html,
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        min-height: 0 !important;
+        height: auto !important;
+        background: #fff !important;
+        overflow: visible !important;
     }
 
     * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        overflow: visible !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid-page !important;
     }
 
-    html, body {
+    .controls,
+    .buttons,
+    .sidebar,
+    .controls-grid,
+    .chatbot-widget,
+    .components-overlay,
+    .components-launcher,
+    .instructions-panel,
+    .instructions-btn,
+    .speak-btn,
+    .graph-actions,
+    #warningModal {
+        display: none !important;
+    }
+
+    .main-container {
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        display: block !important;
         margin: 0 !important;
         padding: 0 !important;
-        background: #d7d0c4 !important;
-        display: block !important;
-        width: auto !important;
+    }
+
+    .simulation-wrapper {
+        width: var(--print-content-width) !important;
+        max-width: none !important;
+        transform: translateX(var(--print-horizontal-offset)) scale(var(--print-scale, 0.8)) !important;
+        transform-origin: top left !important;
+        margin: 0 !important;
+        padding: 0 !important;
         overflow: visible !important;
     }
 
-    /* ── PANEL: scale to fit one sheet ── */
-    .panel {
-        width: 1800px !important;
-        min-width: 1800px !important;
-        max-width: none !important;
-        margin: 0 !important;
-        border: 2px solid #111 !important;
-        zoom: 0.60;
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 16px !important;
-        page-break-after: avoid !important;
-        break-after: avoid !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-    }
-
-    /* ── PANEL-FOOTER: same zoom, no page break ── */
+    .panel,
     .panel-footer {
-        width: 1800px !important;
-        min-width: 1800px !important;
+        width: 100% !important;
+        min-width: 0 !important;
         max-width: none !important;
         margin: 0 !important;
-        margin-bottom: -5mm !important;
-        padding-bottom: 0 !important;
-        border: 2px solid #111 !important;
-        zoom: 0.60;
-        display: flex !important;
-        flex-direction: column !important;
-        page-break-before: avoid !important;
-        break-before: avoid !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        margin-top: 0 !important;
+        height: auto !important;
+        overflow: visible !important;
     }
 
-    /* ── TOP ROW: RESTORE GRID LAYOUT ── */
     .top-row {
-        display: grid !important;
-        grid-template-columns: 1fr 2.6fr 1.2fr !important;
-        grid-template-rows: auto !important;
-        gap: 16px !important;
-        width: 100% !important;
-        align-items: stretch !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        page-break-after: avoid !important;
-        break-after: avoid !important;
-    }
-
-    /* ── LEFT COLUMN ── */
-    .left-column {
-        grid-column: 1 !important;
-        display: block !important;
-        padding: 18px !important;
-        border-right: 3px solid #111 !important;
-        overflow: visible !important;
-    }
-
-    /* ── CENTER COLUMN ── */
-    .center-column {
-        grid-column: 2 !important;
         display: flex !important;
         flex-direction: column !important;
-        gap: 50px !important;
-        padding: 18px !important;
-        border-right: 3px solid #111 !important;
-        overflow: visible !important;
-        width: auto !important;
+        gap: 10px !important;
+        width: 100% !important;
+        border-bottom: none !important;
     }
 
-    /* ── RIGHT COLUMN ── */
+    .left-column,
+    .center-column,
     .right-column {
-        grid-column: 3 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-        overflow: visible !important;
-        border-right: none !important;
-        padding: 18px !important;
+        width: 100% !important;
+        max-width: 100% !important;
         min-width: 0 !important;
-    }
-
-    .right-column .pill-stack {
-        width: 280px !important;
-        max-height: none !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 10px !important;
-    }
-
-    /* ═══════════════════════════════════════════
-       FIX 1: Remove stray black line above
-       Instructions button (instructions-wrapper
-       must have NO border / outline / pseudo)
-    ═══════════════════════════════════════════ */
-    .instructions-wrapper {
-        display: block !important;
-        border: none !important;
-        outline: none !important;
-        box-shadow: none !important;
-        background: transparent !important;
-        width: 280px !important;
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-    }
-
-    /* Kill any pseudo-element that could draw a line */
-    .instructions-wrapper::before,
-    .instructions-wrapper::after {
-        display: none !important;
-        content: none !important;
-        border: none !important;
-        background: none !important;
-    }
-
-    /* Hide the flyout instructions panel — not needed in print */
-    .instructions-panel {
-        display: none !important;
-    }
-
-    .data-section {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        width: 280px !important;
-        margin-top: 16px !important;
-    }
-
-    .pill-stack {
-        display: flex !important;
-        flex-direction: column !important;
+        border-right: none !important;
+        padding: 10px !important;
+        height: auto !important;
         overflow: visible !important;
-        width: 280px !important;
-        gap: 10px !important;
     }
 
-    .pill-stack > .pill-btn {
-        display: flex !important;
-    }
-
-    /* ── OBSERVATION TABLE ── */
-    .obs-title {
-        display: block !important;
-        visibility: visible !important;
-        margin-bottom: 8px !important;
-        text-align: center !important;
-    }
-
-    .data-table-wrapper {
-        display: block !important;
-        visibility: visible !important;
-        width: 100% !important;
-    }
-
-    #observation-container {
-        display: block !important;
-        visibility: visible !important;
-    }
-
-    .data-table {
-        display: table !important;
-        width: 100% !important;
-        border: 2px solid #111 !important;
-        border-collapse: collapse !important;
-        background: #f3efe6 !important;
-        visibility: visible !important;
-    }
-
-    .data-table thead,
-    .data-table tbody {
-        display: table-row-group !important;
-    }
-
-    .data-table tr {
-        display: table-row !important;
-    }
-
-    .data-table th,
-    .data-table td {
-        display: table-cell !important;
-        border: 1.5px solid #111 !important;
-        padding: 6px 10px !important;
-        text-align: center !important;
-        font-weight: 600 !important;
-        background: #e8dcc6 !important;
-        color: #000 !important;
-    }
-
-    /* ── GRAPH SECTION ── */
-    .graph-section {
-        width: 100% !important;
-        display: block !important;
-        background: #d7d0c4 !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        page-break-before: avoid !important;
-        break-before: avoid !important;
-        position: relative !important;
-    }
-
+    .right-column .pill-stack,
+    .data-section,
+    .data-table-wrapper,
+    #observation-container,
+    .graph-section,
+    .graph-body,
     .graph-canvas {
-        background: linear-gradient(180deg, #f3efe6, #e5dfd3) !important;
-        min-height: 200px !important;
-        height: 250px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
         overflow: visible !important;
     }
 
-    #graphPlot {
-        display: block !important;
-        visibility: visible !important;
-        position: absolute !important;
-        inset: 0 !important;
+    .panel-footer {
+        border-top: 0 !important;
+        page-break-before: avoid !important;
+        break-before: avoid-page !important;
     }
 
-    .graph-actions {
-        position: absolute !important;
-        top: -60px !important;
-        right: 18px !important;
-        display: flex !important;
-        gap: 12px !important;
-        z-index: 50 !important;
+    .panel-footer__copyright {
+        page-break-before: avoid !important;
+        break-before: avoid-page !important;
     }
 
-    /* ═══════════════════════════════════════════
-       FIX 2: ARMATURE RHEOSTAT label — force
-       single line exactly like the screen view
-    ═══════════════════════════════════════════ */
-    .rheostat-label1,
-    .rheostat-label2 {
-        white-space: nowrap !important;
-        overflow: visible !important;
-        text-overflow: clip !important;
-        /* keep the absolute positioning the original CSS uses */
-        position: absolute !important;
-    }
-
-    .rheostat-label2 {
-        top: 150px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        text-align: center !important;
-        width: auto !important;     /* let it grow as wide as needed */
-    }
-
-    /* ═══════════════════════════════════════════
-       FIX 3: jsPlumb endpoint positions
-       The panel uses zoom:0.60 so the browser
-       scales all DOM elements — but jsPlumb
-       calculates endpoint offsets in pre-zoom
-       pixel space.  The fix: wrap the jsPlumb
-       container in a transform instead of zoom
-       so that getBoundingClientRect values seen
-       by jsPlumb stay consistent; but since we
-       cannot change JS at print-time we instead
-       lock every endpoint and connector element
-       to `position:absolute` with
-       `transform:none` so they sit exactly where
-       the browser already placed them and do not
-       shift on resize/zoom change.
-    ═══════════════════════════════════════════ */
-
-    /* Freeze jsPlumb SVG overlays in place */
-    .jtk-endpoint,
-    .jtk-endpoint svg,
-    .jtk-connector,
-    .jtk-connector svg,
-    .jtk-overlay {
-        position: absolute !important;
-        visibility: visible !important;
-        transform: none !important;      /* prevent any accidental shift */
-        transition: none !important;
-    }
-
-    /* Freeze point elements — no transform, no transition */
-    [id^="point"],
-    .point {
-        transform: none !important;
-        transition: none !important;
-        position: absolute !important;
-    }
-
-    /*
-     * The root jsPlumb container (.top-row) must NOT
-     * have overflow:hidden — endpoints painted outside
-     * their parent box would otherwise be clipped.
-     */
     .top-row,
     .left-column,
     .center-column,
@@ -2867,51 +2674,28 @@
     .rheostat,
     .meter-panel,
     .meters,
-    .meter-card {
-        overflow: visible !important;
+    .meter-card,
+    .graph-section {
+        page-break-inside: avoid !important;
+        break-inside: avoid-page !important;
     }
 
-    /* ── HIDE INTERACTIVE / FLOATING UI ── */
-    .chatbot-widget,
-    .components-overlay,
-    .components-launcher,
-    .hover-tooltip,
-    #warningModal {
+    .graph-canvas {
+        position: relative !important;
+        min-height: 180px !important;
+    }
+
+    #graphPlot {
+        position: relative !important;
+        inset: auto !important;
+    }
+
+    html.print-no-graph-data .graph-canvas {
+        min-height: 100px !important;
+    }
+
+    html.print-no-graph-data #graphPlot,
+    html.print-no-graph-data .graph-bars {
         display: none !important;
-    }
-
-    /* ── PRESERVE BACKGROUND COLORS ── */
-    .mcb-starter-section,
-    .meter-panel {
-        background-color: #c8a97e !important;
-        border: 3px solid #8c6a48 !important;
-    }
-
-    .workspace {
-        background: #d7d0c4 !important;
-        border: 3px solid #111 !important;
-    }
-
-    .motor-box,
-    .generator-box,
-    .rpm-box {
-        background: linear-gradient(180deg, #b7b2a6, #c5bfb2) !important;
-        border: 3px solid #111 !important;
-    }
-
-    .rpm-display {
-        background: black !important;
-        color: #ff2b2b !important;
-    }
-
-    h3 {
-        background: linear-gradient(135deg, #fdf7e7, #e8d6b8 55%, #d7bc90) !important;
-        color: #2c1a0a !important;
-    }
-
-    .panel-footer__copyright {
-        display: block !important;
-        background: #1a1f25 !important;
-        color: #f2f2f2 !important;
     }
 }

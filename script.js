@@ -99,6 +99,7 @@ jsPlumb.ready(function () {
   let currentRPM = 0;
 
   let currentStepIndex = 0;
+  let isPreparingPrint = false;
 
   let checkClickedAfterCompletion = false;
 
@@ -558,13 +559,17 @@ jsPlumb.ready(function () {
     plotGraphBtn.style.pointerEvents = shouldDisable ? "none" : "auto";
   }
 
-  function drawGraph() {
-    if (graphReadings.length < MIN_GRAPH_POINTS) {
-      showPopup("⚠️ Please add at least 5 readings to plot the graph.", "Insufficient Data");
+  function drawGraph(options = {}) {
+    const minPoints = Number.isFinite(options.minPoints) ? options.minPoints : MIN_GRAPH_POINTS;
+    const silent = Boolean(options.silent);
 
-      return;
+    if (graphReadings.length < minPoints) {
+      if (!silent) {
+        showPopup("⚠️ Please add at least 5 readings to plot the graph.", "Insufficient Data");
+      }
+      return Promise.resolve(false);
     }
-    if (isGuideActive()) playAudio("audiosimulation/Graph.wav");
+    if (!silent && isGuideActive()) playAudio("audiosimulation/Graph.wav");
 
     const sorted = [...graphReadings].sort((a, b) => a.voltage - b.voltage);
     const xValues = sorted.map(r => r.voltage);
@@ -577,7 +582,7 @@ jsPlumb.ready(function () {
     if (graphCanvas) graphCanvas.classList.add("is-plotting");
 
     const graphPlot = document.getElementById("graphPlot");
-    if (!graphPlot) return;
+    if (!graphPlot) return Promise.resolve(false);
     graphPlot.style.display = "block";
 
     function loadPlotly() {
@@ -591,7 +596,7 @@ jsPlumb.ready(function () {
       });
     }
 
-    loadPlotly().then(() => {
+    return loadPlotly().then(() => {
       const trace = {
         x: xValues,
         y: yValues,
@@ -624,7 +629,7 @@ jsPlumb.ready(function () {
         plot_bgcolor: "rgba(0,0,0,0)"
       };
 
-      Plotly.newPlot(graphPlot, [trace], layout, { responsive: true, displaylogo: false }).then(() => {
+      return Plotly.newPlot(graphPlot, [trace], layout, { responsive: true, displaylogo: false }).then(() => {
         Plotly.Plots.resize(graphPlot);
 
         if (reportBtn) {
@@ -634,10 +639,31 @@ jsPlumb.ready(function () {
           reportBtn.style.pointerEvents = "auto";
         }
 
-        showPopup("Graph plotted successfully. You can now generate the report.", "Graph Ready");
-        voiceStage = "graph_done";
+        if (!silent) {
+          showPopup("Graph plotted successfully. You can now generate the report.", "Graph Ready");
+          voiceStage = "graph_done";
+        }
+        return true;
       });
-    });
+    }).catch(() => false);
+  }
+
+  function setPrintGraphDensityClass() {
+    const hasGraphDataForPrint = graphReadings.length >= 2;
+    document.documentElement.classList.toggle("print-no-graph-data", !hasGraphDataForPrint);
+    return hasGraphDataForPrint;
+  }
+
+  async function prepareGraphForPrint() {
+    const hasGraphDataForPrint = setPrintGraphDensityClass();
+    if (!hasGraphDataForPrint) return false;
+
+    isPreparingPrint = true;
+    try {
+      return await drawGraph({ silent: true, minPoints: 2 });
+    } finally {
+      isPreparingPrint = false;
+    }
   }
 
   const starterHandle = document.querySelector(".starter-handle");
@@ -1762,10 +1788,71 @@ jsPlumb.ready(function () {
     });
   });
 
+  const PRINT_PAGE_WIDTH_MM = 297;
+  const PRINT_PAGE_HEIGHT_MM = 210;
+  const PRINT_PAGE_MARGIN_MM = 10;
+
+  function mmToPx(mm) {
+    return (mm * 96) / 25.4;
+  }
+
+  function updateSinglePagePrintScale() {
+    const wrapper = document.querySelector(".simulation-wrapper");
+    const panel = document.querySelector(".panel");
+    const footer = document.querySelector(".panel-footer");
+    if (!panel || !footer || !wrapper) return;
+
+    document.documentElement.style.setProperty("--print-scale", "1");
+    document.documentElement.style.setProperty("--print-content-width", `${Math.max(panel.scrollWidth, footer.scrollWidth)}px`);
+    document.documentElement.style.setProperty("--print-horizontal-offset", "0px");
+
+    // Force layout after resetting scale.
+    void panel.offsetHeight;
+
+    const contentWidth = Math.max(wrapper.scrollWidth, panel.scrollWidth, footer.scrollWidth);
+    const contentHeight = wrapper.scrollHeight;
+    if (!contentWidth || !contentHeight) return;
+
+    const printableWidthPx = mmToPx(PRINT_PAGE_WIDTH_MM - (PRINT_PAGE_MARGIN_MM * 2));
+    const printableHeightPx = mmToPx(PRINT_PAGE_HEIGHT_MM - (PRINT_PAGE_MARGIN_MM * 2));
+
+    const rawScale = Math.min(
+      printableWidthPx / contentWidth,
+      printableHeightPx / contentHeight
+    );
+
+    const clampedScale = Math.max(0.2, Math.min(1, rawScale));
+    const horizontalOffset = Math.max(0, (printableWidthPx - (contentWidth * clampedScale)) / 2);
+
+    document.documentElement.style.setProperty("--print-scale", clampedScale.toFixed(4));
+    document.documentElement.style.setProperty("--print-content-width", `${Math.ceil(contentWidth)}px`);
+    document.documentElement.style.setProperty("--print-horizontal-offset", `${horizontalOffset.toFixed(2)}px`);
+  }
+
+  function clearSinglePagePrintScale() {
+    document.documentElement.style.removeProperty("--print-scale");
+    document.documentElement.style.removeProperty("--print-content-width");
+    document.documentElement.style.removeProperty("--print-horizontal-offset");
+  }
+
+  window.addEventListener("beforeprint", () => {
+    setPrintGraphDensityClass();
+    updateSinglePagePrintScale();
+    if (typeof jsPlumb !== "undefined") jsPlumb.repaintEverything();
+  });
+
+  window.addEventListener("afterprint", () => {
+    clearSinglePagePrintScale();
+    document.documentElement.classList.remove("print-no-graph-data");
+    if (typeof jsPlumb !== "undefined") jsPlumb.repaintEverything();
+  });
+
   const printBtn = document.getElementById("printBtn");
   if (printBtn) {
-    printBtn.addEventListener("click", () => {
+    printBtn.addEventListener("click", async () => {
       if (isGuideActive()) playAudio("audiosimulation/Print.wav");
+      await prepareGraphForPrint();
+      updateSinglePagePrintScale();
       if (typeof jsPlumb !== "undefined") jsPlumb.repaintEverything();
       setTimeout(() => window.print(), 200);
     });
@@ -2048,3 +2135,4 @@ if (skipBtn && iframe) {
     setup();
   }
 })();
+
