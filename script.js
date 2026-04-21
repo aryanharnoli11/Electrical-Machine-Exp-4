@@ -736,7 +736,7 @@ jsPlumb.ready(function () {
   const armatureKnob = document.querySelector(".nob2");
   const voltNeedle = document.querySelector(".meter-needle1");
   const voltNeedle2 = document.querySelector(".meter-needle2");
-  const ampNeedle = document.querySelector(".meter-needle3");
+  const ampNeedle = document.querySelector(".meter-needle3 img");
   const rotor = document.getElementById("gr");
   const rpmDisplay = document.getElementById("rpmDisplay");
 
@@ -820,7 +820,7 @@ jsPlumb.ready(function () {
 
   function setFieldDefaultMeters() {
     const ampAngle = -70 + (7.7 / 10) * 140;
-    ampNeedle.style.transform = `translate(-30%, -90%) rotate(${ampAngle}deg)`;
+    ampNeedle.style.transform = `rotate(${ampAngle}deg)`;
   }
 
   const KNOB_START_X = armatureKnob
@@ -1050,7 +1050,7 @@ jsPlumb.ready(function () {
     if (armatureKnob) {
       armatureKnob.style.cursor = "not-allowed";
     }
-    if (ampNeedle) ampNeedle.style.transform = "translate(-30%, -90%) rotate(-70deg)";
+    if (ampNeedle) ampNeedle.style.transform = "rotate(-70deg)";
     if (voltNeedle) voltNeedle.style.transform = "translate(-75%, -82%) rotate(-75deg)";
     if (voltNeedle2) voltNeedle2.style.transform = "translate(-75%, -82%) rotate(-75deg)";
     if (rotor) {
@@ -2015,14 +2015,21 @@ jsPlumb.ready(function () {
   }
 
   function updateSinglePagePrintScale() {
+    const wrapper = document.querySelector(".simulation-wrapper") ||
+      document.querySelector(".simulation-container");
     const panel = document.querySelector(".panel");
     const footer = document.querySelector(".panel-footer");
-    if (!panel || !footer) return;
+    if (!wrapper || !panel || !footer) return;
 
-    const panelRect = panel.getBoundingClientRect();
-    const footerRect = footer.getBoundingClientRect();
-    const contentWidth = Math.max(panelRect.width, footerRect.width);
-    const contentHeight = panelRect.height + footerRect.height;
+    const contentWidth = Math.max(
+      wrapper.scrollWidth,
+      panel.scrollWidth,
+      footer.scrollWidth
+    );
+    const contentHeight = Math.max(
+      wrapper.scrollHeight,
+      panel.scrollHeight + footer.scrollHeight
+    );
     if (!contentWidth || !contentHeight) return;
 
     document.documentElement.style.setProperty("--print-scale", "1");
@@ -2031,7 +2038,7 @@ jsPlumb.ready(function () {
     document.documentElement.style.setProperty("--print-transform-scale", "1");
 
     // Force layout after resetting scale.
-    void panel.offsetHeight;
+    void wrapper.offsetHeight;
 
     const printableWidthPx = mmToPx(PRINT_PAGE_WIDTH_MM - (PRINT_PAGE_MARGIN_MM * 2));
     const printableHeightPx = mmToPx(PRINT_PAGE_HEIGHT_MM - (PRINT_PAGE_MARGIN_MM * 2));
@@ -2041,7 +2048,7 @@ jsPlumb.ready(function () {
       printableHeightPx / contentHeight
     );
 
-    const safetyScale = rawScale * 0.97;
+    const safetyScale = rawScale * 0.985;
     const clampedScale = Math.max(0.2, Math.min(1, safetyScale));
     const horizontalOffset = Math.max(0, (printableWidthPx - (contentWidth * clampedScale)) / 2);
 
@@ -2073,11 +2080,21 @@ jsPlumb.ready(function () {
     document.documentElement.classList[method]("print-mode");
   }
 
+  function waitForStablePrintLayout() {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
+  }
+
   window.addEventListener("beforeprint", () => {
     setPrintModeClass(true);
     setPrintGraphDensityClass();
     updateSinglePagePrintScale();
     repaintPrintConnections();
+    setTimeout(() => {
+      updateSinglePagePrintScale();
+      repaintPrintConnections();
+    }, 60);
   });
 
   window.addEventListener("afterprint", () => {
@@ -2095,7 +2112,11 @@ jsPlumb.ready(function () {
       await prepareGraphForPrint();
       updateSinglePagePrintScale();
       repaintPrintConnections();
-      setTimeout(() => window.print(), 200);
+      await waitForStablePrintLayout();
+      updateSinglePagePrintScale();
+      repaintPrintConnections();
+      await waitForStablePrintLayout();
+      setTimeout(() => window.print(), 80);
     });
   }
 });

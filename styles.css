@@ -49,7 +49,7 @@
     .main-container {
         width: 100%;
         display: flex;
-        justify-content: center;
+        justify-content: flex-start;
         overflow: visible;
     }
 
@@ -58,6 +58,9 @@
         flex-direction: column;
         align-items: stretch;
         overflow: visible;
+        width: max-content;
+        max-width: none;
+        margin-inline: auto;
     }
 
     .panel {
@@ -1244,9 +1247,15 @@
         }
 
         .meter-needle3 {
+            width: 30px; /* Compensate ammeter-inner scale so all needles look same size */
             left: 49%;
             top: 52%;
-            transform: translate(-30%, -90%) rotate(-70deg);
+            transform: translate(-30%, -90%);
+        }
+
+        .meter-needle3 img {
+            transform: rotate(-70deg);
+            transform-origin: 50% 90%;
         }
 
 
@@ -2625,40 +2634,33 @@ body.print-mode .no-print {
         print-color-adjust: exact !important;
         animation: none !important;
         transition: none !important;
-        overflow: visible !important;
     }
     .no-print,
-    .controls,
-    .buttons,
-    .sidebar,
-    .controls-grid,
     .chatbot-widget,
     .components-overlay,
-    .components-launcher,
-    .instructions-panel,
-    .instructions-btn,
-    .speak-btn,
-    .graph-actions,
     #warningModal {
         display: none !important;
     }
-    .main-container,
-    .simulation-container,
-    .simulation-wrapper {
-        display: block !important;
-        position: static !important;
-        width: var(--print-content-width) !important;
-        max-width: none !important;
-        min-width: 0 !important;
-        height: auto !important;
-        min-height: 0 !important;
-        max-height: none !important;
-        margin: 0 auto !important;
+    /* Preserve the runtime layout and scale the full board uniformly. */
+    .main-container {
+        display: flex !important;
+        justify-content: flex-start !important;
+        width: max-content !important;
+        margin: 0 !important;
         padding: 0 !important;
         overflow: visible !important;
     }
     .simulation-container,
     .simulation-wrapper {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        width: max-content !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
         transform: translateX(var(--print-horizontal-offset)) scale(var(--print-transform-scale, 1)) !important;
         transform-origin: top left !important;
     }
@@ -2668,19 +2670,20 @@ body.print-mode .no-print {
             transform: none !important;
         }
     }
-    .panel,
+    .panel {
+        width: 1800px !important;
+        min-width: 1800px !important;
+        margin: 18px 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 16px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid-page !important;
+    }
     .panel-footer {
-        position: static !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        height: auto !important;
-        min-height: 0 !important;
-        max-height: none !important;
-        overflow: visible !important;
-        display: block !important;
+        width: 1800px !important;
+        min-width: 1800px !important;
+        margin: 16px 0 18px 0 !important;
         page-break-inside: avoid !important;
         break-inside: avoid-page !important;
     }
@@ -2688,75 +2691,17 @@ body.print-mode .no-print {
         display: grid !important;
         grid-template-columns: minmax(360px, 1.15fr) minmax(980px, 2.6fr) minmax(420px, 1.3fr) !important;
         gap: clamp(8px, 2vw, 16px) !important;
-        width: auto !important;
-        border-bottom: none !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid-page !important;
-    }
-    .left-column {
-        grid-column: 1 / 2 !important;
-        grid-row: 1 / 2 !important;
-    }
-    .center-column {
-        grid-column: 2 / 3 !important;
-        grid-row: 1 / 2 !important;
-    }
-    .right-column {
-        grid-column: 3 / 4 !important;
-        grid-row: 1 / 2 !important;
-        border-top: none !important;
-        border-left: none !important;
-        justify-content: flex-start !important;
-        align-items: stretch !important;
+        border-bottom: 0 !important;
     }
     .left-column,
     .center-column,
-    .right-column,
-    .workspace,
-    .data-section,
-    .data-table-wrapper,
-    #observation-container,
-    .graph-section,
-    .graph-body,
-    .graph-canvas,
-    .meter,
-    .graph {
-        width: auto !important;
-        max-width: none !important;
-        min-width: 0 !important;
-        height: auto !important;
-        max-height: none !important;
-        min-height: 0 !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid-page !important;
-    }
-
-    .meter-panel,
-    .meters,
-    .meter-card,
-    .mcb-starter-section,
-    .rheostat,
-    .motor-box,
-    .generator-box,
-    .rpm-box {
-        page-break-inside: avoid !important;
-        break-inside: avoid-page !important;
-    }
-    .right-column .pill-stack {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: none !important;
-    }
-    .data-section {
-        width: 100% !important;
-        max-width: none !important;
-        margin: 0 !important;
-        align-items: stretch !important;
+    .right-column {
+        padding: clamp(12px, 2vw, 18px) !important;
     }
     .graph-canvas {
         position: relative !important;
-        min-height: 140px !important;
-        height: 140px !important;
+        min-height: 0 !important;
+        height: auto !important;
     }
     #graphPlot {
         position: relative !important;
@@ -2765,19 +2710,6 @@ body.print-mode .no-print {
     .panel-footer__copyright {
         padding: 0.35rem 0.7rem 0.4rem !important;
         font-size: 10px !important;
-    }
-    canvas,
-    img,
-    svg {
-        max-width: 100% !important;
-        height: auto !important;
-    }
-    html.print-no-graph-data .graph-canvas {
-        min-height: 100px !important;
-    }
-    html.print-no-graph-data #graphPlot,
-    html.print-no-graph-data .graph-bars {
-        display: none !important;
     }
 }
 
