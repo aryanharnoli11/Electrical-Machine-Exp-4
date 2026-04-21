@@ -1796,12 +1796,13 @@ jsPlumb.ready(function () {
 
       // ✅ Sirf flag save karo — progress report unlock ke liye
       const updatedAt = String(Date.now());
+      const pendingReportMarker = "__vlab_report_pending__";
       try {
-        localStorage.setItem("vlab_exp2_simulation_report_html", "1");
+        localStorage.setItem("vlab_exp2_simulation_report_html", pendingReportMarker);
         localStorage.setItem("vlab_exp2_simulation_report_updated_at", updatedAt);
         const activeHash = localStorage.getItem("vlab_exp2_active_user_hash");
         if (activeHash) {
-          localStorage.setItem(`vlab_exp2_user_${activeHash}_simulation_report_html`, "1");
+          localStorage.setItem(`vlab_exp2_user_${activeHash}_simulation_report_html`, pendingReportMarker);
           localStorage.setItem(`vlab_exp2_user_${activeHash}_simulation_report_updated_at`, updatedAt);
         }
       } catch(e) {}
@@ -1810,7 +1811,7 @@ jsPlumb.ready(function () {
      // ✅ Parent window notify
       try {
         window.parent.postMessage(
-          { type: "vlab:simulation_report_generated", updatedAt, html: "1" }, "*"
+          { type: "vlab:simulation_report_generated", updatedAt, html: pendingReportMarker }, "*"
         );
       } catch(e) {}
 

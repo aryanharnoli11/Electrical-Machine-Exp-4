@@ -3318,6 +3318,11 @@
 
   ensureProgressReportState();
   window.addEventListener("storage", ensureProgressReportState);
+  window.addEventListener("pageshow", ensureProgressReportState);
+  window.addEventListener("focus", ensureProgressReportState);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) ensureProgressReportState();
+  });
 
   // YES → go to form
   if (yesBtn) yesBtn.addEventListener("click", () => {

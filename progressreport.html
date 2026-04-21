@@ -1031,6 +1031,11 @@
         );
     }
 
+    function isPendingSimulationReportValue(value) {
+      const normalized = String(value || "").trim();
+      return normalized === "1" || normalized === "__vlab_report_pending__";
+    }
+
     function getSimulationReportData() {
       try {
         const activeHash = localStorage.getItem("vlab_exp2_active_user_hash");
@@ -1042,7 +1047,10 @@
           const html = localStorage.getItem(key);
           if (html && html.trim()) {
             const updatedAt = localStorage.getItem(key.replace("_html", "_updated_at"));
-            return { html: normalizeSimulationReportHtml(html), updatedAt };
+            if (isPendingSimulationReportValue(html)) {
+              return { html: String(html).trim(), updatedAt, pending: true };
+            }
+            return { html: normalizeSimulationReportHtml(html), updatedAt, pending: false };
           }
         }
       } catch {}
@@ -1053,9 +1061,17 @@
           const data = JSON.parse(window.name.slice(PREFIX.length)) || {};
           const html = (data["vlab_exp2_simulation_report_html"] || "").toString();
           if (html && html.trim()) {
+            if (isPendingSimulationReportValue(html)) {
+              return {
+                html: String(html).trim(),
+                updatedAt: data["vlab_exp2_simulation_report_updated_at"] || null,
+                pending: true
+              };
+            }
             return {
               html: normalizeSimulationReportHtml(html),
-              updatedAt: data["vlab_exp2_simulation_report_updated_at"] || null
+              updatedAt: data["vlab_exp2_simulation_report_updated_at"] || null,
+              pending: false
             };
           }
         }
@@ -1113,7 +1129,17 @@
         iframe.setAttribute("scrolling", "no");
         iframe.style.overflow = "hidden";
         attachSimulationFrameAutoResize(iframe);
-        iframe.srcdoc = report.html;
+        if (report.pending) {
+          // Legacy marker support: render live report page instead of srcdoc placeholder.
+          iframe.removeAttribute("srcdoc");
+          iframe.src = "report.html";
+          status.textContent = upd
+            ? `Simulation report attached (updated: ${upd}).`
+            : "Simulation report attached.";
+        } else {
+          iframe.removeAttribute("src");
+          iframe.srcdoc = report.html;
+        }
         iframe.classList.remove("hidden");
         scheduleEmbeddedHeightSync();
       } catch {

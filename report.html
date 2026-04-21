@@ -510,6 +510,70 @@
 
   window.reportGraphReady = graphReady;
 
+  function persistSimulationReportSnapshot() {
+    var updatedAt = String(Date.now());
+    var snapshotHtml = "";
+
+    try {
+      snapshotHtml = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+    } catch (e) {
+      snapshotHtml = "";
+    }
+
+    if (!snapshotHtml || !snapshotHtml.trim()) return;
+
+    try {
+      localStorage.setItem("vlab_exp2_simulation_report_html", snapshotHtml);
+      localStorage.setItem("vlab_exp2_simulation_report_updated_at", updatedAt);
+      var activeHash = localStorage.getItem("vlab_exp2_active_user_hash");
+      if (activeHash) {
+        localStorage.setItem("vlab_exp2_user_" + activeHash + "_simulation_report_html", snapshotHtml);
+        localStorage.setItem("vlab_exp2_user_" + activeHash + "_simulation_report_updated_at", updatedAt);
+      }
+    } catch (e) {}
+
+    try {
+      var PREFIX = "VLAB_EXP2::";
+      var wn = {};
+      if (typeof window.name === "string" && window.name.startsWith(PREFIX)) {
+        wn = JSON.parse(window.name.slice(PREFIX.length)) || {};
+      }
+      wn["vlab_exp2_simulation_report_html"] = snapshotHtml;
+      wn["vlab_exp2_simulation_report_updated_at"] = updatedAt;
+      window.name = PREFIX + JSON.stringify(wn);
+    } catch (e) {}
+
+    var payload = {
+      type: "vlab:simulation_report_generated",
+      updatedAt: updatedAt,
+      html: snapshotHtml
+    };
+
+    var isTopLevelContext = false;
+    try {
+      isTopLevelContext = window.top === window;
+    } catch (e) {
+      isTopLevelContext = false;
+    }
+    if (!isTopLevelContext) return;
+
+    try { window.postMessage(payload, "*"); } catch (e) {}
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage(payload, "*");
+      }
+    } catch (e) {}
+    try {
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage(payload, "*");
+      }
+    } catch (e) {}
+  }
+
+  Promise.resolve(window.reportGraphReady || Promise.resolve()).finally(function() {
+    setTimeout(persistSimulationReportSnapshot, 0);
+  });
+
   // ══════════════════════════════════════════
   //  5. PDF DOWNLOAD (html2pdf)
   // ══════════════════════════════════════════
@@ -574,3 +638,4 @@
 </script>
 </body>
 </html>
+

@@ -473,6 +473,12 @@
 
     // Disable/enable report link
     syncProgressReportLinks();
+    window.addEventListener("storage", syncProgressReportLinks);
+    window.addEventListener("pageshow", syncProgressReportLinks);
+    window.addEventListener("focus", syncProgressReportLinks);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) syncProgressReportLinks();
+    });
 
     // Intercept Progress Report clicks if locked
     document.addEventListener("click", (event) => {

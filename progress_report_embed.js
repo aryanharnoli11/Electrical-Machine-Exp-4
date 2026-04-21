@@ -648,6 +648,12 @@
       }
     }
     syncProgressReportUI();
+    window.addEventListener('storage', syncProgressReportUI);
+    window.addEventListener('pageshow', syncProgressReportUI);
+    window.addEventListener('focus', syncProgressReportUI);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) syncProgressReportUI();
+    });
 
     function showProgressReportLockedAlert() {
       const { needsUser, needsSim } = getProgressReportRequirements();
@@ -853,4 +859,3 @@
     document.addEventListener('DOMContentLoaded', init);
   }
 })();
-
