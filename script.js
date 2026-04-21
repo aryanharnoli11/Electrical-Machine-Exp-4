@@ -1829,21 +1829,23 @@ jsPlumb.ready(function () {
   }
 
   function updateSinglePagePrintScale() {
-    const wrapper = document.querySelector(".simulation-wrapper");
     const panel = document.querySelector(".panel");
     const footer = document.querySelector(".panel-footer");
-    if (!panel || !footer || !wrapper) return;
+    if (!panel || !footer) return;
+
+    const panelRect = panel.getBoundingClientRect();
+    const footerRect = footer.getBoundingClientRect();
+    const contentWidth = Math.max(panelRect.width, footerRect.width);
+    const contentHeight = panelRect.height + footerRect.height;
+    if (!contentWidth || !contentHeight) return;
 
     document.documentElement.style.setProperty("--print-scale", "1");
-    document.documentElement.style.setProperty("--print-content-width", `${Math.max(panel.scrollWidth, footer.scrollWidth)}px`);
+    document.documentElement.style.setProperty("--print-content-width", `${Math.ceil(contentWidth)}px`);
     document.documentElement.style.setProperty("--print-horizontal-offset", "0px");
+    document.documentElement.style.setProperty("--print-transform-scale", "1");
 
     // Force layout after resetting scale.
     void panel.offsetHeight;
-
-    const contentWidth = Math.max(wrapper.scrollWidth, panel.scrollWidth, footer.scrollWidth);
-    const contentHeight = wrapper.scrollHeight;
-    if (!contentWidth || !contentHeight) return;
 
     const printableWidthPx = mmToPx(PRINT_PAGE_WIDTH_MM - (PRINT_PAGE_MARGIN_MM * 2));
     const printableHeightPx = mmToPx(PRINT_PAGE_HEIGHT_MM - (PRINT_PAGE_MARGIN_MM * 2));
@@ -1853,39 +1855,60 @@ jsPlumb.ready(function () {
       printableHeightPx / contentHeight
     );
 
-    const clampedScale = Math.max(0.2, Math.min(1, rawScale));
+    const safetyScale = rawScale * 0.97;
+    const clampedScale = Math.max(0.2, Math.min(1, safetyScale));
     const horizontalOffset = Math.max(0, (printableWidthPx - (contentWidth * clampedScale)) / 2);
 
     document.documentElement.style.setProperty("--print-scale", clampedScale.toFixed(4));
     document.documentElement.style.setProperty("--print-content-width", `${Math.ceil(contentWidth)}px`);
     document.documentElement.style.setProperty("--print-horizontal-offset", `${horizontalOffset.toFixed(2)}px`);
+    document.documentElement.style.setProperty("--print-transform-scale", clampedScale.toFixed(4));
   }
 
   function clearSinglePagePrintScale() {
     document.documentElement.style.removeProperty("--print-scale");
     document.documentElement.style.removeProperty("--print-content-width");
     document.documentElement.style.removeProperty("--print-horizontal-offset");
+    document.documentElement.style.removeProperty("--print-transform-scale");
+  }
+
+  function repaintPrintConnections() {
+    if (typeof forceJsPlumbRefresh === "function") {
+      forceJsPlumbRefresh();
+      setTimeout(() => forceJsPlumbRefresh(), 60);
+      return;
+    }
+    if (typeof jsPlumb !== "undefined") jsPlumb.repaintEverything();
+  }
+
+  function setPrintModeClass(enabled) {
+    const method = enabled ? "add" : "remove";
+    document.body.classList[method]("print-mode");
+    document.documentElement.classList[method]("print-mode");
   }
 
   window.addEventListener("beforeprint", () => {
+    setPrintModeClass(true);
     setPrintGraphDensityClass();
     updateSinglePagePrintScale();
-    if (typeof jsPlumb !== "undefined") jsPlumb.repaintEverything();
+    repaintPrintConnections();
   });
 
   window.addEventListener("afterprint", () => {
+    setPrintModeClass(false);
     clearSinglePagePrintScale();
     document.documentElement.classList.remove("print-no-graph-data");
-    if (typeof jsPlumb !== "undefined") jsPlumb.repaintEverything();
+    repaintPrintConnections();
   });
 
   const printBtn = document.getElementById("printBtn");
   if (printBtn) {
     printBtn.addEventListener("click", async () => {
       if (isGuideActive()) playAudio("audiosimulation/Print.wav");
+      setPrintModeClass(true);
       await prepareGraphForPrint();
       updateSinglePagePrintScale();
-      if (typeof jsPlumb !== "undefined") jsPlumb.repaintEverything();
+      repaintPrintConnections();
       setTimeout(() => window.print(), 200);
     });
   }

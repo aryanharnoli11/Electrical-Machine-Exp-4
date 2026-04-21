@@ -754,17 +754,15 @@
     width: 100%;
     border-collapse: collapse;
     } */
-
         .data-table {
             width: 100%;
             border: 2px solid #111;
-            /* 🔥 single outer border */
+            /* single outer border */
             border-collapse: collapse;
-            /* 🔥 sab borders merge */
+            table-layout: fixed;
+            /* all borders merge */
             background: #f3efe6;
         }
-
-
         /* .data-table th,
     .data-table td {
         border: 2px solid #111;
@@ -783,6 +781,30 @@
             font-weight: 600;
             background: #e8dcc6;
         }
+
+        .data-table thead th {
+        font-size: 10.5px;
+        line-height: 1.1;
+        white-space: nowrap;
+        letter-spacing: 0.01em;
+        padding: 5px 4px;
+    }
+    .data-table tbody td {
+        font-size: 11.5px;
+        padding: 5px 6px;
+    }
+    .data-table th:first-child,
+    .data-table td:first-child {
+        width: 12%;
+    }
+    .data-table th:nth-child(2),
+    .data-table td:nth-child(2),
+    .data-table th:nth-child(3),
+    .data-table td:nth-child(3),
+    .data-table th:nth-child(4),
+    .data-table td:nth-child(4) {
+        width: 29.333%;
+    }
 
     .data-table th:first-child {
         white-space: nowrap;
@@ -2545,6 +2567,16 @@
     --print-scale: 0.8;
     --print-content-width: 1800px;
     --print-horizontal-offset: 0px;
+    --print-transform-scale: 0.8;
+}
+
+html.print-mode,
+body.print-mode {
+    overflow: visible !important;
+}
+
+body.print-mode .no-print {
+    display: none !important;
 }
 
 @media print {
@@ -2552,26 +2584,30 @@
         size: A4 landscape;
         margin: 10mm;
     }
-
     html,
     body {
         margin: 0 !important;
         padding: 0 !important;
-        width: 100% !important;
+        width: auto !important;
         min-height: 0 !important;
         height: auto !important;
         background: #fff !important;
         overflow: visible !important;
     }
-
-    * {
+    body {
+        display: block !important;
+        zoom: var(--print-scale, 0.8);
+    }
+    *,
+    *::before,
+    *::after {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        animation: none !important;
+        transition: none !important;
         overflow: visible !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid-page !important;
     }
-
+    .no-print,
     .controls,
     .buttons,
     .sidebar,
@@ -2586,114 +2622,139 @@
     #warningModal {
         display: none !important;
     }
-
-    .main-container {
-        width: 100% !important;
-        height: auto !important;
-        overflow: visible !important;
-        display: block !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
+    .main-container,
+    .simulation-container,
     .simulation-wrapper {
+        display: block !important;
+        position: static !important;
         width: var(--print-content-width) !important;
         max-width: none !important;
-        transform: translateX(var(--print-horizontal-offset)) scale(var(--print-scale, 0.8)) !important;
-        transform-origin: top left !important;
-        margin: 0 !important;
+        min-width: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        margin: 0 auto !important;
         padding: 0 !important;
         overflow: visible !important;
     }
-
+    .simulation-container,
+    .simulation-wrapper {
+        transform: translateX(var(--print-horizontal-offset)) scale(var(--print-transform-scale, 1)) !important;
+        transform-origin: top left !important;
+    }
+    @supports (zoom: 1) {
+        .simulation-container,
+        .simulation-wrapper {
+            transform: none !important;
+        }
+    }
     .panel,
     .panel-footer {
+        position: static !important;
         width: 100% !important;
         min-width: 0 !important;
         max-width: none !important;
         margin: 0 !important;
+        padding: 0 !important;
         height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
         overflow: visible !important;
+        display: block !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid-page !important;
     }
-
     .top-row {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 10px !important;
-        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: minmax(360px, 1.15fr) minmax(980px, 2.6fr) minmax(420px, 1.3fr) !important;
+        gap: clamp(8px, 2vw, 16px) !important;
+        width: auto !important;
         border-bottom: none !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid-page !important;
     }
-
+    .left-column {
+        grid-column: 1 / 2 !important;
+        grid-row: 1 / 2 !important;
+    }
+    .center-column {
+        grid-column: 2 / 3 !important;
+        grid-row: 1 / 2 !important;
+    }
+    .right-column {
+        grid-column: 3 / 4 !important;
+        grid-row: 1 / 2 !important;
+        border-top: none !important;
+        border-left: none !important;
+        justify-content: flex-start !important;
+        align-items: stretch !important;
+    }
     .left-column,
     .center-column,
-    .right-column {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        border-right: none !important;
-        padding: 10px !important;
-        height: auto !important;
-        overflow: visible !important;
-    }
-
-    .right-column .pill-stack,
+    .right-column,
+    .workspace,
     .data-section,
     .data-table-wrapper,
     #observation-container,
     .graph-section,
     .graph-body,
-    .graph-canvas {
-        width: 100% !important;
+    .graph-canvas,
+    .meter,
+    .graph {
+        width: auto !important;
+        max-width: none !important;
         min-width: 0 !important;
-        max-width: 100% !important;
         height: auto !important;
+        max-height: none !important;
         min-height: 0 !important;
-        overflow: visible !important;
-    }
-
-    .panel-footer {
-        border-top: 0 !important;
-        page-break-before: avoid !important;
-        break-before: avoid-page !important;
-    }
-
-    .panel-footer__copyright {
-        page-break-before: avoid !important;
-        break-before: avoid-page !important;
-    }
-
-    .top-row,
-    .left-column,
-    .center-column,
-    .right-column,
-    .workspace,
-    .motor-box,
-    .generator-box,
-    .rpm-box,
-    .mcb-starter-section,
-    .rheostat,
-    .meter-panel,
-    .meters,
-    .meter-card,
-    .graph-section {
         page-break-inside: avoid !important;
         break-inside: avoid-page !important;
     }
 
+    .meter-panel,
+    .meters,
+    .meter-card,
+    .mcb-starter-section,
+    .rheostat,
+    .motor-box,
+    .generator-box,
+    .rpm-box {
+        page-break-inside: avoid !important;
+        break-inside: avoid-page !important;
+    }
+    .right-column .pill-stack {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+    .data-section {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        align-items: stretch !important;
+    }
     .graph-canvas {
         position: relative !important;
-        min-height: 180px !important;
+        min-height: 140px !important;
+        height: 140px !important;
     }
-
     #graphPlot {
         position: relative !important;
         inset: auto !important;
     }
-
+    .panel-footer__copyright {
+        padding: 0.35rem 0.7rem 0.4rem !important;
+        font-size: 10px !important;
+    }
+    canvas,
+    img,
+    svg {
+        max-width: 100% !important;
+        height: auto !important;
+    }
     html.print-no-graph-data .graph-canvas {
         min-height: 100px !important;
     }
-
     html.print-no-graph-data #graphPlot,
     html.print-no-graph-data .graph-bars {
         display: none !important;
