@@ -98,6 +98,7 @@ jsPlumb.ready(function () {
   let currentVoltage = 0;
   let currentRPM = 0;
   let currentArmatureResistance = 0;
+  let armatureReadingReady = false;
 
   let currentStepIndex = 0;
   let isPreparingPrint = false;
@@ -511,12 +512,17 @@ jsPlumb.ready(function () {
   }
 
   function addObservationRow() {
-    if (currentVoltage === 0 || currentRPM === 0) {
+    if (!fieldLocked) {
       showPopup("First, set the field rheostat. ", "Step Required");
       if (window.isGuideActive()) {
       playAudio("audiosimulation/BeforeaddingreadingAddToTable.wav");
     }
     return;
+    }
+
+    if (!armatureReadingReady) {
+      showPopup("Slide the armature rheostat knob to take a reading first.", "Step Required");
+      return;
     }
 
     if (graphReadings.length >= 7) {
@@ -744,24 +750,52 @@ jsPlumb.ready(function () {
   let rotorSpeed = 0;
 
   const armatureTable = [
-    { resistance: 75, voltage: 132, rpm: 1085 },
-    { resistance: 62.5, voltage: 139, rpm: 1170 },
-    { resistance: 50, voltage: 152, rpm: 1301 },
-    { resistance: 37.5, voltage: 166, rpm: 1400 },
-    { resistance: 25, voltage: 176, rpm: 1507 },
-    { resistance: 12.5, voltage: 198, rpm: 1690 },
-    { resistance: 0, voltage: 220, rpm: 1889 }
+    { resistance: 31.5, voltage: 204, rpm: 1450 },
+    { resistance: 34.5, voltage: 200, rpm: 1425 },
+    { resistance: 39, voltage: 192, rpm: 1400 },
+    { resistance: 40.5, voltage: 188, rpm: 1375 },
+    { resistance: 43, voltage: 184, rpm: 1350 },
+    { resistance: 45.5, voltage: 180, rpm: 1325 },
+    { resistance: 48, voltage: 176, rpm: 1300 }
   ];
+  const VOLTMETER_ANGLE_MIN = -35;
+  const VOLTMETER_ANGLE_MAX = -1;
+  const ROTOR_SPEED_MIN = 3;
+  const ROTOR_SPEED_MAX = 17;
+  const armatureVoltageMin = Math.min(...armatureTable.map((row) => row.voltage));
+  const armatureVoltageMax = Math.max(...armatureTable.map((row) => row.voltage));
+  const armatureRPMMin = Math.min(...armatureTable.map((row) => row.rpm));
+  const armatureRPMMax = Math.max(...armatureTable.map((row) => row.rpm));
+
+  function mapLinearRange(value, inputMin, inputMax, outputMin, outputMax) {
+    if (inputMax === inputMin) return (outputMin + outputMax) / 2;
+    const clamped = Math.max(inputMin, Math.min(value, inputMax));
+    const ratio = (clamped - inputMin) / (inputMax - inputMin);
+    return outputMin + ratio * (outputMax - outputMin);
+  }
 
   function updateVoltmeterByArmature(stepIndex) {
     const row = armatureTable[stepIndex];
     currentArmatureResistance = row.resistance;
     currentVoltage = row.voltage;
     currentRPM = row.rpm;
-    rotorSpeed = ARMATURE_ROTATION_SPEED[stepIndex];
+    armatureReadingReady = true;
+    lastArmatureStepIndex = stepIndex;
+    rotorSpeed = mapLinearRange(
+      currentRPM,
+      armatureRPMMin,
+      armatureRPMMax,
+      ROTOR_SPEED_MIN,
+      ROTOR_SPEED_MAX
+    );
 
-    const needleAngles = [-35, -30, -24.5, -21.5, -17.5, -8, -1];
-    const voltAngle = needleAngles[stepIndex];
+    const voltAngle = mapLinearRange(
+      currentVoltage,
+      armatureVoltageMin,
+      armatureVoltageMax,
+      VOLTMETER_ANGLE_MIN,
+      VOLTMETER_ANGLE_MAX
+    );
     if (voltNeedle) voltNeedle.style.transform = `translate(-75%, -82%) rotate(${voltAngle}deg)`;
     if (voltNeedle2) voltNeedle2.style.transform = `translate(-75%, -82%) rotate(${voltAngle}deg)`;
 
@@ -777,8 +811,6 @@ jsPlumb.ready(function () {
     }
   }
 
-  const ARMATURE_ROTATION_SPEED = [3, 5, 7, 9, 11, 15, 17];
-
   function runRotor() {
     if (!rotorRunning) return;
     rotorAngle += rotorSpeed;
@@ -791,15 +823,155 @@ jsPlumb.ready(function () {
     ampNeedle.style.transform = `translate(-30%, -90%) rotate(${ampAngle}deg)`;
   }
 
-  const KNOB_START_X = 28;
+  const KNOB_START_X = armatureKnob
+    ? parseFloat(window.getComputedStyle(armatureKnob).left) || 28
+    : 28;
+  const DEFAULT_MAX_X = 252;
+  const ARMATURE_READING_STEPS = armatureTable.length;
   let armatureX = KNOB_START_X;
   let isDragging = false;
-  const MIN_X = 28;
-  const MAX_X = 252;
-  const TOTAL_STEPS = armatureTable.length;
-  const STEP_WIDTH = (MAX_X - MIN_X) / (TOTAL_STEPS - 1);
+  let armatureMovedThisDrag = false;
+  let lastArmatureStepIndex = null;
+  let armatureSnapIndex = 0; // 0 = initial position, 1..7 = reading divisions
+  const ARMATURE_DRAG_THRESHOLD_PX = 2;
+  let armatureHomeX = KNOB_START_X;
+  let armatureDivisionMinX = KNOB_START_X;
+  let armatureDivisionMaxX = DEFAULT_MAX_X;
+  let armatureDivisionStepWidth =
+    (armatureDivisionMaxX - armatureDivisionMinX) /
+    Math.max(ARMATURE_READING_STEPS - 1, 1);
+  // Ratios measured from images/Rheostat.png for the green winding zone.
+  const ARMATURE_GREEN_START_RATIO = 153 / 986;
+  const ARMATURE_GREEN_END_RATIO = 798 / 986;
+  const armatureRheostat = armatureKnob ? armatureKnob.closest(".rheostat") : null;
+  const armatureRheostatImage = armatureRheostat
+    ? armatureRheostat.querySelector(".rheostat-img-2")
+    : null;
   let startX = 0;
   let knobStartX = 0;
+
+  function getArmatureXBySnapIndex(snapIndex) {
+    if (snapIndex <= 0) return armatureHomeX;
+    if (ARMATURE_READING_STEPS <= 1) return armatureDivisionMinX;
+    const safeSnapIndex = Math.max(
+      1,
+      Math.min(snapIndex, ARMATURE_READING_STEPS)
+    );
+    return armatureDivisionMinX + (safeSnapIndex - 1) * armatureDivisionStepWidth;
+  }
+
+  function getNearestArmatureSnapIndex(x) {
+    const homeDistance = Math.abs(x - armatureHomeX);
+    if (armatureDivisionStepWidth <= 0) {
+      const firstDivisionDistance = Math.abs(x - armatureDivisionMinX);
+      return homeDistance <= firstDivisionDistance ? 0 : 1;
+    }
+
+    const clampedDivisionX = Math.max(
+      armatureDivisionMinX,
+      Math.min(armatureDivisionMaxX, x)
+    );
+    const rawDivisionIndex =
+      (clampedDivisionX - armatureDivisionMinX) / armatureDivisionStepWidth;
+    const safeDivisionIndex = Math.max(
+      0,
+      Math.min(Math.round(rawDivisionIndex), ARMATURE_READING_STEPS - 1)
+    );
+    const divisionSnapIndex = safeDivisionIndex + 1;
+    const divisionDistance = Math.abs(x - getArmatureXBySnapIndex(divisionSnapIndex));
+    return homeDistance <= divisionDistance ? 0 : divisionSnapIndex;
+  }
+
+  function setArmatureToSnapIndex(snapIndex, shouldUpdateReading = true) {
+    const safeSnapIndex = Math.max(
+      0,
+      Math.min(snapIndex, ARMATURE_READING_STEPS)
+    );
+    armatureSnapIndex = safeSnapIndex;
+    armatureX = getArmatureXBySnapIndex(safeSnapIndex);
+    if (armatureKnob) {
+      armatureKnob.style.transform = `translateX(${armatureX - KNOB_START_X}px)`;
+    }
+
+    if (safeSnapIndex === 0) {
+      armatureReadingReady = false;
+      lastArmatureStepIndex = null;
+      currentVoltage = 0;
+      currentRPM = 0;
+      currentArmatureResistance = 0;
+      rotorSpeed = 0;
+      if (rpmDisplay) rpmDisplay.textContent = "0";
+      if (voltNeedle) {
+        voltNeedle.style.transform = "translate(-75%, -82%) rotate(-75deg)";
+      }
+      if (voltNeedle2) {
+        voltNeedle2.style.transform = "translate(-75%, -82%) rotate(-75deg)";
+      }
+      return;
+    }
+
+    const stepIndex = safeSnapIndex - 1;
+    if (shouldUpdateReading || lastArmatureStepIndex !== stepIndex) {
+      updateVoltmeterByArmature(stepIndex);
+    } else {
+      armatureReadingReady = true;
+    }
+  }
+
+  function recalcArmatureTrackBounds() {
+    if (!armatureKnob || !armatureRheostat) return;
+
+    const knobWidth = armatureKnob.offsetWidth || 34;
+    armatureHomeX = KNOB_START_X;
+    let computedMin = armatureHomeX;
+    let computedMax = Math.max(armatureHomeX, DEFAULT_MAX_X);
+
+    if (armatureRheostatImage) {
+      const rheostatRect = armatureRheostat.getBoundingClientRect();
+      const imageRect = armatureRheostatImage.getBoundingClientRect();
+      const edgePadding = 2;
+      const trackStartX =
+        imageRect.left -
+        rheostatRect.left +
+        imageRect.width * ARMATURE_GREEN_START_RATIO;
+      const trackEndX =
+        imageRect.left -
+        rheostatRect.left +
+        imageRect.width * ARMATURE_GREEN_END_RATIO;
+      const knobAnchorX = knobWidth / 2;
+      computedMin = Math.max(
+        armatureHomeX,
+        trackStartX - knobAnchorX + edgePadding
+      );
+      computedMax =
+        trackEndX - knobAnchorX - edgePadding;
+    } else {
+      computedMax = armatureRheostat.clientWidth - knobWidth;
+    }
+
+    // Keep 7 divisions after initial with uniform gap.
+    // Preferred mode: initial->D1 gap equals all other division gaps.
+    computedMax = Math.max(computedMin, computedMax);
+    const equalGapFromHome =
+      (computedMax - armatureHomeX) / Math.max(ARMATURE_READING_STEPS, 1);
+    const firstDivisionX = armatureHomeX + equalGapFromHome;
+
+    if (equalGapFromHome > 0 && firstDivisionX >= computedMin) {
+      armatureDivisionStepWidth = equalGapFromHome;
+      armatureDivisionMinX = firstDivisionX;
+      armatureDivisionMaxX =
+        armatureHomeX + armatureDivisionStepWidth * ARMATURE_READING_STEPS;
+    } else {
+      // Fallback for very tight layouts: keep all 7 divisions inside green part.
+      armatureDivisionMinX = computedMin;
+      armatureDivisionMaxX = computedMax;
+      armatureDivisionStepWidth =
+        (armatureDivisionMaxX - armatureDivisionMinX) /
+        Math.max(ARMATURE_READING_STEPS - 1, 1);
+    }
+
+    setArmatureToSnapIndex(armatureSnapIndex, false);
+  }
 
   if (starterHandle) starterHandle.style.cursor = "not-allowed";
 
@@ -812,23 +984,24 @@ jsPlumb.ready(function () {
         return;
       }
       isDragging = true;
+      armatureMovedThisDrag = false;
       startX = e.clientX;
       knobStartX = armatureX;
       armatureKnob.style.cursor = "grabbing";
       e.preventDefault();
     });
 
-    document.addEventListener("mouseup", () => {
+    document.addEventListener("mouseup", (e) => {
       if (!isDragging) return;
       isDragging = false;
       armatureKnob.style.cursor = "grab";
-      const rawStep = (armatureX - MIN_X) / STEP_WIDTH;
-      const stepIndex = Math.round(rawStep);
-      const safeIndex = Math.max(0, Math.min(stepIndex, armatureTable.length - 1));
-      armatureX = MIN_X + safeIndex * STEP_WIDTH;
-      armatureKnob.style.transform = `translateX(${armatureX - KNOB_START_X}px)`;
-      updateVoltmeterByArmature(safeIndex);
-      if (!rotorRunning && mcbState === "ON" && starterEngaged) {
+      if (Math.abs(e.clientX - startX) > ARMATURE_DRAG_THRESHOLD_PX) {
+        armatureMovedThisDrag = true;
+      }
+      const snapIndex = getNearestArmatureSnapIndex(armatureX);
+      setArmatureToSnapIndex(snapIndex, armatureMovedThisDrag);
+      if (!armatureMovedThisDrag) return;
+      if (snapIndex > 0 && !rotorRunning && mcbState === "ON" && starterEngaged) {
         rotorRunning = true;
         requestAnimationFrame(runRotor);
       }
@@ -837,17 +1010,17 @@ jsPlumb.ready(function () {
     document.addEventListener("mousemove", (e) => {
       if (!isDragging || mcbState !== "ON") return;
       const deltaX = e.clientX - startX;
+      if (Math.abs(deltaX) > ARMATURE_DRAG_THRESHOLD_PX) {
+        armatureMovedThisDrag = true;
+      }
       const rawX = knobStartX + deltaX;
-      const clampedX = Math.max(MIN_X, Math.min(MAX_X, rawX));
-      const rawStep = (clampedX - MIN_X) / STEP_WIDTH;
-      const stepIndex = Math.round(rawStep);
-      const safeIndex = Math.max(0, Math.min(stepIndex, armatureTable.length - 1));
-      const snappedX = MIN_X + safeIndex * STEP_WIDTH;
-      if (snappedX !== armatureX) {
-        armatureX = snappedX;
-        armatureKnob.style.transform = `translateX(${armatureX - KNOB_START_X}px)`;
-        updateVoltmeterByArmature(safeIndex);
-        if (!rotorRunning && mcbState === "ON" && starterEngaged) {
+      const dragMinX = Math.min(armatureHomeX, armatureDivisionMinX);
+      const dragMaxX = Math.max(armatureHomeX, armatureDivisionMaxX);
+      const clampedX = Math.max(dragMinX, Math.min(dragMaxX, rawX));
+      const snapIndex = getNearestArmatureSnapIndex(clampedX);
+      if (snapIndex !== armatureSnapIndex) {
+        setArmatureToSnapIndex(snapIndex, true);
+        if (snapIndex > 0 && !rotorRunning && mcbState === "ON" && starterEngaged) {
           rotorRunning = true;
           requestAnimationFrame(runRotor);
         }
@@ -855,8 +1028,14 @@ jsPlumb.ready(function () {
     });
   }
 
+  recalcArmatureTrackBounds();
+  window.addEventListener("resize", recalcArmatureTrackBounds);
+
   function turnMCBOff(reason = "") {
     completedByAutoConnect = false;
+    armatureReadingReady = false;
+    lastArmatureStepIndex = null;
+    currentVoltage = 0;
     currentArmatureResistance = 0;
     currentRPM = 0;
     if (rpmDisplay) rpmDisplay.textContent = "0";
@@ -866,10 +1045,9 @@ jsPlumb.ready(function () {
     mcbReady = false;
     if (mcbImg) mcbImg.src = "images/mcb-off.png";
     enableCheckAndAutoConnect();
-    armatureX = KNOB_START_X;
+    setArmatureToSnapIndex(0, false);
     isDragging = false;
     if (armatureKnob) {
-      armatureKnob.style.transform = "translateX(0px)";
       armatureKnob.style.cursor = "not-allowed";
     }
     if (ampNeedle) ampNeedle.style.transform = "translate(-30%, -90%) rotate(-70deg)";
@@ -1030,6 +1208,13 @@ jsPlumb.ready(function () {
     fieldDragging = false;
     fieldCurrentPercent = parseFloat(fieldKnob.style.left) || FIELD_MIN;
     fieldLocked = true;
+    armatureReadingReady = false;
+    lastArmatureStepIndex = null;
+    currentVoltage = 0;
+    currentRPM = 0;
+    currentArmatureResistance = 0;
+    if (rpmDisplay) rpmDisplay.textContent = "0";
+    fieldRheostatAudioPlayed = true;
     fieldKnob.style.cursor = "not-allowed";
     if (isGuideActive()) {
       // 🔊 AUDIO LOCATION 11 — field knob released and locked by user drag
@@ -1038,7 +1223,6 @@ jsPlumb.ready(function () {
     }
     if (armatureKnob) armatureKnob.style.cursor = "grab";
     setFieldDefaultMeters();
-    updateVoltmeterByArmature(0);
     if (!rotorRunning && mcbState === "ON" && starterEngaged) {
       rotorRunning = true;
       requestAnimationFrame(runRotor);
@@ -1073,6 +1257,7 @@ jsPlumb.ready(function () {
     const fieldKnob = document.querySelector(".nob1");
     if (!fieldKnob) return;
     fieldLocked = true;
+    fieldRheostatAudioPlayed = true;
     fieldKnob.style.cursor = "not-allowed";
     if (isGuideActive()) {
       // 🔊 AUDIO LOCATION 13 — lockFieldResistance() called programmatically
