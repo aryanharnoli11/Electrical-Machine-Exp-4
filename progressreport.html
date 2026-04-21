@@ -27,6 +27,9 @@
       font-family: 'Inter', sans-serif;
       background: #ffffff;
       color: #111827;
+      line-height: 1.6;
+      font-kerning: normal;
+      text-rendering: optimizeLegibility;
     }
 
     .vl-header {
@@ -94,8 +97,7 @@
     }
 
  
-    #downloadBtn,
-    #resetBtn {
+    #downloadBtn {
       border-radius: 4px !important;
       font-weight: 600 !important;
       box-shadow: none !important;
@@ -111,12 +113,6 @@
     }
     
     #downloadBtn:hover { background: #111827 !important; }
-    #resetBtn {
-      background: #ffffff !important;
-      color: #1f2937 !important;
-      border: 1px solid #9ca3af !important;
-    }
-    #resetBtn:hover { background: #f9fafb !important; }
 
     .report-section {
       background: #ffffff;
@@ -124,12 +120,28 @@
       border-radius: 4px;
       padding: 16px;
     }
+    .report-section,
+    .report-section * {
+      letter-spacing: normal;
+      word-spacing: normal;
+    }
     .report-section-title {
       font-size: 18px;
       line-height: 1.3;
       font-weight: 600;
       margin: 0 0 10px;
       color: #111827;
+    }
+    .report-section p,
+    .report-muted,
+    .report-cell-muted,
+    .report-details-grid,
+    .report-table td {
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      line-height: 1.65;
+      letter-spacing: normal;
+      word-spacing: normal;
+      text-align: left;
     }
     .report-grid-two {
       display: grid;
@@ -154,6 +166,13 @@
       font-weight: 700;
       color: #111827;
       margin: 8px 0 0;
+    }
+    .report-subduration {
+      font-size: 22px;
+      line-height: 1.25;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 6px 0 0;
     }
     .report-section-head {
       display: flex;
@@ -215,6 +234,16 @@
       overflow: hidden;
       background: #ffffff;
     }
+    #simulationReportFrame {
+      display: block;
+      width: 100%;
+      overflow: hidden;
+      scrollbar-width: none;
+      background: #ffffff;
+    }
+    #simulationReportFrame::-webkit-scrollbar {
+      display: none;
+    }
     .simulation-print-snapshot {
       display: none;
       width: 100%;
@@ -260,10 +289,15 @@
     }
     .modal-box.danger { border-color:#fecaca; }
     .modal-box h2 { font-size: 18px; font-weight: 800; margin:0 0 8px; color:#0f172a; }
-    .modal-box p { margin:0 0 14px; color:#334155; text-align: justify; }
+    .modal-box p {
+      margin:0 0 14px;
+      color:#334155;
+      text-align: left;
+      line-height: 1.65;
+      letter-spacing: normal;
+      word-spacing: normal;
+    }
     .modal-actions { display:flex; gap:10px; justify-content:flex-end; }
-    .modal-actions[hidden] { display:none !important; }
-.modal-actions:not([hidden]) { display:flex !important; }
     .modal-close-btn {
       padding: 10px 14px;
       border-radius: 12px;
@@ -276,7 +310,7 @@
     .is-modal-open { overflow:hidden; }
 
     @media print {
-      header, footer, #downloadBtn, #resetBtn { display:none !important; }
+      header, footer, #downloadBtn { display:none !important; }
       body { background:#fff !important; }
       #report-container { padding-top: 0 !important; padding-bottom: 0 !important; max-width: none !important; }
       .report-section { page-break-inside: avoid; break-inside: avoid-page; }
@@ -343,16 +377,12 @@
   </div>
 
   <div id="report-container" class="max-w-5xl mx-auto px-4 py-12">
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <div class="flex flex-col items-start gap-3 mb-6">
       <div>
-      
         <h1 class="text-3xl font-bold text-slate-900">Progress Report</h1>
- 
       </div>
       <div class="flex flex-wrap gap-2">
-        
         <button id="downloadBtn" class="px-4 py-2 font-semibold">Download</button>
-        <button id="resetBtn" class="px-4 py-2 font-semibold">Reset Data</button>
       </div>
     </div>
 
@@ -416,6 +446,7 @@
     function setReportContainerVisible(visible) {
       if (!reportContainer) return;
       reportContainer.style.display = visible ? "" : "none";
+      scheduleEmbeddedHeightSync();
     }
 
     function setReportLockedVisible(visible) {
@@ -425,6 +456,250 @@
         reportLockedNotice.scrollIntoView({ behavior: "smooth" });
         if (reportContainer) reportContainer.style.display = "none";
       }
+      scheduleEmbeddedHeightSync();
+    }
+
+    function getVisibleElementHeight(el) {
+      if (!el || el.classList?.contains("hidden")) return 0;
+      return Math.max(
+        el.scrollHeight || 0,
+        el.offsetHeight || 0,
+        Math.ceil(el.getBoundingClientRect?.().height || 0)
+      );
+    }
+
+    function getProgressReportHeight() {
+      const reportContentHeight = getVisibleElementHeight(contentEl);
+      const reportContainerHeight = getVisibleElementHeight(reportContainer);
+      const lockedNoticeHeight = getVisibleElementHeight(reportLockedNotice);
+
+      return Math.max(
+        reportContentHeight,
+        reportContainerHeight,
+        lockedNoticeHeight,
+        640
+      );
+    }
+
+    function notifyParentOfHeight() {
+      if (window.parent === window) return;
+      const height = Math.max(640, Math.ceil(getProgressReportHeight()) + 8);
+      if (window.__vlabLastReportedProgressHeight === height) return;
+      window.__vlabLastReportedProgressHeight = height;
+      try {
+        window.parent.postMessage({ type: "vlab:progress_report_height", height }, "*");
+      } catch (error) {}
+    }
+
+    function scheduleEmbeddedHeightSync() {
+      if (window.parent === window) return;
+      if (window.__vlabProgressHeightSyncQueued) return;
+      window.__vlabProgressHeightSyncQueued = true;
+
+      window.requestAnimationFrame(() => {
+        window.__vlabProgressHeightSyncQueued = false;
+        notifyParentOfHeight();
+        window.clearTimeout(window.__vlabProgressHeightLateTimer);
+        window.__vlabProgressHeightLateTimer = window.setTimeout(notifyParentOfHeight, 180);
+      });
+    }
+
+    function cleanupSimulationFrameAutoResize(iframe) {
+      if (!iframe) return;
+      try { iframe.__vlabFrameResizeObserver?.disconnect?.(); } catch {}
+      try { iframe.__vlabFrameMutationObserver?.disconnect?.(); } catch {}
+      try { iframe.__vlabFrameWindow?.removeEventListener?.("resize", iframe.__vlabFrameResizeHandler); } catch {}
+      iframe.__vlabFrameResizeObserver = null;
+      iframe.__vlabFrameMutationObserver = null;
+      iframe.__vlabFrameWindow = null;
+      iframe.__vlabFrameResizeHandler = null;
+    }
+
+    function ensureReadableSimulationReportTypography(doc) {
+      if (!doc) return;
+
+      let head = doc.head;
+      if (!head) {
+        head = doc.createElement("head");
+        if (doc.documentElement.firstChild) {
+          doc.documentElement.insertBefore(head, doc.documentElement.firstChild);
+        } else {
+          doc.documentElement.appendChild(head);
+        }
+      }
+
+      if (!head.querySelector('link[data-vlab-fonts="inter"]')) {
+        const link = doc.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap";
+        link.setAttribute("data-vlab-fonts", "inter");
+        head.appendChild(link);
+      }
+
+      let styleEl = doc.getElementById("vlab-readable-typography");
+      if (!styleEl) {
+        styleEl = doc.createElement("style");
+        styleEl.id = "vlab-readable-typography";
+        head.appendChild(styleEl);
+      }
+
+      styleEl.textContent = `
+        html, body, #report-root {
+          font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important;
+          line-height: 1.65 !important;
+          font-kerning: normal !important;
+          text-rendering: optimizeLegibility !important;
+        }
+        p, li, td, th, .section, .results-card, .info-card, .report-stamp, .badge, .report-subtitle {
+          font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important;
+          letter-spacing: normal !important;
+          word-spacing: normal !important;
+          font-kerning: normal !important;
+        }
+        p {
+          line-height: 1.68 !important;
+          text-align: left !important;
+          word-break: normal !important;
+          overflow-wrap: break-word !important;
+          white-space: normal !important;
+        }
+        p[style*="text-align:justify"],
+        p[style*="text-align: justify"] {
+          text-align: left !important;
+        }
+      `;
+    }
+
+    async function waitForDocumentFonts(doc, timeoutMs = 2500) {
+      if (!doc?.fonts || typeof doc.fonts.ready?.then !== "function") return;
+
+      try {
+        await Promise.race([
+          doc.fonts.ready,
+          new Promise((resolve) => setTimeout(resolve, timeoutMs))
+        ]);
+      } catch {}
+    }
+
+    function getIframeContentHeight(doc) {
+      const reportRoot = doc?.getElementById("report-root") || doc?.body || doc?.documentElement;
+      if (!reportRoot) return 0;
+
+      const rootRect = reportRoot.getBoundingClientRect?.() || { top: 0, height: 0 };
+      const children = Array.from(reportRoot.children || []);
+
+      if (!children.length) {
+        return Math.max(
+          Math.ceil(rootRect.height || 0),
+          reportRoot.scrollHeight || 0,
+          reportRoot.offsetHeight || 0
+        );
+      }
+
+      let maxBottom = 0;
+      children.forEach((child) => {
+        const rect = child.getBoundingClientRect?.();
+        if (!rect) return;
+
+        let marginBottom = 0;
+        try {
+          marginBottom = parseFloat(doc.defaultView?.getComputedStyle(child)?.marginBottom || "0") || 0;
+        } catch {}
+
+        maxBottom = Math.max(maxBottom, rect.bottom - rootRect.top + marginBottom);
+      });
+
+      let paddingBottom = 0;
+      try {
+        paddingBottom = parseFloat(doc.defaultView?.getComputedStyle(reportRoot)?.paddingBottom || "0") || 0;
+      } catch {}
+
+      return Math.max(0, Math.ceil(maxBottom + paddingBottom));
+    }
+
+    function syncSimulationReportFrameHeight(iframe) {
+      if (!iframe || iframe.classList.contains("hidden")) return;
+
+      let doc = null;
+      try {
+        doc = iframe.contentDocument;
+      } catch (error) {
+        return;
+      }
+      if (!doc) return;
+
+      try {
+        if (doc.documentElement) doc.documentElement.style.overflow = "hidden";
+        if (doc.body) doc.body.style.overflow = "hidden";
+      } catch (error) {}
+
+      iframe.setAttribute("scrolling", "no");
+      iframe.style.overflow = "hidden";
+
+      const nextHeight = Math.max(
+        540,
+        getIframeContentHeight(doc)
+      );
+
+      const currentHeight = parseFloat(iframe.style.height) || 0;
+      if (Math.abs(currentHeight - nextHeight) > 1) {
+        iframe.style.height = `${nextHeight}px`;
+        iframe.style.minHeight = `${nextHeight}px`;
+        scheduleEmbeddedHeightSync();
+      }
+    }
+
+    function attachSimulationFrameAutoResize(iframe) {
+      if (!iframe) return;
+      cleanupSimulationFrameAutoResize(iframe);
+
+      const setup = () => {
+        let doc = null;
+        try {
+          doc = iframe.contentDocument;
+        } catch (error) {
+          return;
+        }
+        if (!doc) return;
+
+        ensureReadableSimulationReportTypography(doc);
+        syncSimulationReportFrameHeight(iframe);
+
+        const resizeHandler = () => syncSimulationReportFrameHeight(iframe);
+        iframe.__vlabFrameResizeHandler = resizeHandler;
+
+        if (typeof ResizeObserver === "function") {
+          const resizeObserver = new ResizeObserver(resizeHandler);
+          if (doc.documentElement) resizeObserver.observe(doc.documentElement);
+          if (doc.body && doc.body !== doc.documentElement) resizeObserver.observe(doc.body);
+          iframe.__vlabFrameResizeObserver = resizeObserver;
+        }
+
+        if (typeof MutationObserver === "function") {
+          const mutationObserver = new MutationObserver(resizeHandler);
+          const mutationTarget = doc.body || doc.documentElement;
+          if (mutationTarget) {
+            mutationObserver.observe(mutationTarget, {
+              childList: true,
+              subtree: true,
+              characterData: true
+            });
+            iframe.__vlabFrameMutationObserver = mutationObserver;
+          }
+        }
+
+        try {
+          iframe.__vlabFrameWindow = doc.defaultView || null;
+          iframe.__vlabFrameWindow?.addEventListener?.("resize", resizeHandler);
+        } catch (error) {}
+
+        waitForDocumentFonts(doc).then(resizeHandler);
+        window.setTimeout(resizeHandler, 80);
+        window.setTimeout(resizeHandler, 400);
+        window.setTimeout(resizeHandler, 1200);
+      };
+
+      iframe.addEventListener("load", setup, { once: true });
     }
 
     function showReportAlert(message, title = "Alert", options = {}) {
@@ -502,18 +777,12 @@
       window.location.href = target;
     }
 
-   function navigateToAim() {
-  try {
-    const target = window.location.href.replace(/[^/]*$/, "aim.html");
-    if (window.top && window.top !== window) {
-      window.top.location.href = target;
-    } else {
+    function navigateToAim() {
+      try {
+        if (window.top && window.top !== window) { window.top.location.href = "aim.html"; return; }
+      } catch {}
       window.location.href = "aim.html";
     }
-  } catch {
-    window.location.href = "aim.html";
-  }
-}
 
     // ---- Guard: tracker must exist
     if (!window.VLProgress) {
@@ -554,19 +823,6 @@
     setReportLockedVisible(false);
     renderReport(simulationReport);
 
- function formatDurationHMS(ms) {
-  if (!ms || ms < 0) return "0s";
-  const totalSec = Math.floor(ms / 1000);
-  const hours    = Math.floor(totalSec / 3600);
-  const minutes  = Math.floor((totalSec % 3600) / 60);
-  const seconds  = totalSec % 60;
-
-  if (hours > 0)   return `${hours}h ${minutes}m ${seconds}s`;
-  if (minutes > 0) return `${minutes}m ${seconds}s`;
-  return `${seconds}s`;
-}
-
-
     function renderReport(simReport) {
       if (!contentEl) return;
 
@@ -576,7 +832,9 @@
       const ts = state.timestamps || {};
       const start = ts.sessionStart || null;
       const end = ts.reportViewedAt || new Date().toISOString();
-      const totalMs = start ? (new Date(end).getTime() - new Date(start).getTime()) : 0;
+      const experimentMs = start ? Math.max(0, new Date(end).getTime() - new Date(start).getTime()) : 0;
+      const simulationTiming = getSimulationTimingData(simReport, ts);
+      const totalMs = experimentMs + (simulationTiming.durationMs || 0);
 
       const pretestData = getAssessmentData("pretest");
       const posttestData = getAssessmentData("posttest");
@@ -596,19 +854,21 @@
             <h2 class="report-section-title">Experiment Timeline</h2>
             <div class="space-y-2 text-sm text-slate-800">
               <div><span class="report-label">Session Start:</span> ${escapeHTML(formatTimelineDateTime(start) || start || "-")}</div>
-              <div><span class="report-label">Session End:</span> ${escapeHTML(formatTimelineDateTime(end) || end || "-")}</div>
+              <div><span class="report-label">Simulation Start:</span> ${escapeHTML(simulationTiming.startDisplay)}</div>
             </div>
           </section>
           <section class="report-section">
-            <h2 class="report-section-title">Total Duration</h2>
-          <p class="report-duration">${formatDurationHMS(totalMs)}</p>
+            <h2 class="report-section-title">Time Summary</h2>
+            <div>
+              <div class="report-label">Total Time Taken</div>
+              <p class="report-duration">${VLProgress.formatMs(totalMs)}</p>
+            </div>
           </section>
         </div>
 
         <section class="report-section">
           <div class="report-section-head">
             <h2 class="report-section-title" style="margin:0;">Assessment Scores</h2>
-            
           </div>
           <div class="report-table-wrap">
             <table class="report-table">
@@ -638,6 +898,7 @@
 
       contentEl.innerHTML = base;
       renderSimulationReport(simReport);
+      scheduleEmbeddedHeightSync();
     }
 
     function formatTimestamp(value) {
@@ -671,6 +932,105 @@
       return `${datePart}, ${timePart}`;
     }
 
+    function decodeHtmlEntities(value) {
+      const txt = document.createElement("textarea");
+      txt.innerHTML = String(value || "");
+      return txt.value;
+    }
+
+    function parseSimulationTimingFromHtml(html) {
+      if (!html || typeof html !== "string") {
+        return { startText: null, endText: null, durationText: null };
+      }
+
+      function extract(label) {
+        const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const match = html.match(new RegExp(`<span class="label">${escaped}:<\\/span><br>\\s*([^<]+)`, "i"));
+        return match && match[1] ? decodeHtmlEntities(match[1].trim()) : null;
+      }
+
+      return {
+        startText: extract("Start Time"),
+        endText: extract("End Time"),
+        durationText: extract("Total Time Spent")
+      };
+    }
+
+    function parseDurationTextToMs(value) {
+      const text = String(value || "").trim().toLowerCase();
+      if (!text) return 0;
+
+      let totalMs = 0;
+      const hourMatch = text.match(/(\d+)\s*(hr|hrs|hour|hours)/);
+      const minuteMatch = text.match(/(\d+)\s*(min|mins|minute|minutes)/);
+      const secondMatch = text.match(/(\d+)\s*(sec|secs|second|seconds)/);
+
+      if (hourMatch) totalMs += Number(hourMatch[1]) * 60 * 60 * 1000;
+      if (minuteMatch) totalMs += Number(minuteMatch[1]) * 60 * 1000;
+      if (secondMatch) totalMs += Number(secondMatch[1]) * 1000;
+
+      return Number.isFinite(totalMs) ? totalMs : 0;
+    }
+
+    function getSimulationTimingData(simReport, timestamps) {
+      const parsed = parseSimulationTimingFromHtml(simReport?.html);
+      const simulationStart = timestamps?.simulationStart || null;
+      const simulationEnd = timestamps?.simulationEnd || null;
+
+      const simulationMs =
+        simulationStart && simulationEnd
+          ? Math.max(0, new Date(simulationEnd).getTime() - new Date(simulationStart).getTime())
+          : null;
+
+      return {
+        startDisplay: formatTimelineDateTime(simulationStart) || parsed.startText || "-",
+        endDisplay:
+          formatTimelineDateTime(simulationEnd) ||
+          parsed.endText ||
+          formatTimelineDateTime(simReport?.updatedAt) ||
+          "-",
+        durationMs:
+          (simulationMs !== null ? simulationMs : null) ??
+          parseDurationTextToMs(parsed.durationText),
+        durationDisplay:
+          (simulationMs !== null ? VLProgress.formatMs(simulationMs) : null) ||
+          parsed.durationText ||
+          "-"
+      };
+    }
+
+    function normalizeSimulationReportHtml(html) {
+      if (!html || typeof html !== "string") return html;
+
+      return html
+        .replace(/(<\/(?:span|strong|b|em)>)(?=[A-Za-z0-9])/g, "$1 ")
+        .replace(/text-align\s*:\s*justify\s*;?/gi, "text-align:left;")
+        .replace(
+          /<p><span class="label">Experiment Title:<\/span>\s*To study the Load Characteristics of DC shunt generator<\/p>/g,
+          '<p><span class="label">Experiment Title:</span> To Study the Load Characteristics of a DC Shunt Generator</p>'
+        )
+        .replace(
+          /<p style="text-align:left;">To study the external characteristic of a DC shunt generator by varying the lamp load, measuring the terminal voltage and load current, and plotting the terminal voltage versus load current [^<]* curve\.<\/p>/g,
+          '<p style="text-align:left;">To study the load characteristics of a DC shunt generator by varying the lamp load, measuring terminal voltage and load current, and plotting the V-I characteristic curve.</p>'
+        )
+        .replace(
+          /<p style="text-align:left;">Connections were completed as instructed, supply was switched ON, lamp load was varied, and the corresponding load current and terminal voltage readings were recorded, and a graph was generated between terminal voltage and load current\.<\/p>/g,
+          '<p style="text-align:left;">The circuit connections were completed as per the procedure. The supply was switched on, the lamp load was varied step by step, the corresponding load current and terminal voltage readings were recorded, and the load characteristic graph was plotted.</p>'
+        )
+        .replace(
+          /<h3>Components and key Parameters<\/h3>/g,
+          '<h3>Components and Key Parameters</h3>'
+        )
+        .replace(
+          /<li>3-Point Starter: 220V DC, 7\.5 HP<\/li>/g,
+          '<li>3-Point Starter: 220 V DC, 7.5 HP</li>'
+        )
+        .replace(
+          /<li>Bulbs: 10 [^<]* 200 W each<\/li>/g,
+          '<li>Bulbs: 10 x 200 W each</li>'
+        );
+    }
+
     function getSimulationReportData() {
       try {
         const activeHash = localStorage.getItem("vlab_exp2_active_user_hash");
@@ -682,7 +1042,7 @@
           const html = localStorage.getItem(key);
           if (html && html.trim()) {
             const updatedAt = localStorage.getItem(key.replace("_html", "_updated_at"));
-            return { html, updatedAt };
+            return { html: normalizeSimulationReportHtml(html), updatedAt };
           }
         }
       } catch {}
@@ -693,7 +1053,10 @@
           const data = JSON.parse(window.name.slice(PREFIX.length)) || {};
           const html = (data["vlab_exp2_simulation_report_html"] || "").toString();
           if (html && html.trim()) {
-            return { html, updatedAt: data["vlab_exp2_simulation_report_updated_at"] || null };
+            return {
+              html: normalizeSimulationReportHtml(html),
+              updatedAt: data["vlab_exp2_simulation_report_updated_at"] || null
+            };
           }
         }
       } catch {}
@@ -729,31 +1092,142 @@
       return null;
     }
 
-  function renderSimulationReport(report) {
-  const iframe = document.getElementById("simulationReportFrame");
-  const status = document.getElementById("simulationReportStatus");
-  if (!iframe || !status) return;
-  currentSimulationReport = report;
+    function renderSimulationReport(report) {
+      const iframe = document.getElementById("simulationReportFrame");
+      const status = document.getElementById("simulationReportStatus");
+      if (!iframe || !status) return;
+      currentSimulationReport = report;
 
-  // Check karo sirf flag hai ya nahi ("1" = report exists)
-  if (!report || !report.html) {
-    iframe.classList.add("hidden");
-    status.textContent = "No simulation report found. Run simulation and click Report.";
-    return;
-  }
+      if (!report || !report.html) {
+        iframe.classList.add("hidden");
+        status.textContent = "No simulation report found. Run simulation and click Report.";
+        cleanupSimulationFrameAutoResize(iframe);
+        scheduleEmbeddedHeightSync();
+        return;
+      }
 
-  const upd = report.updatedAt ? (formatTimestamp(report.updatedAt) || report.updatedAt) : null;
-  status.textContent = upd ? `Simulation report attached (updated: ${upd}).` : "Simulation report attached.";
+      const upd = report.updatedAt ? (formatTimestamp(report.updatedAt) || report.updatedAt) : null;
+      status.textContent = upd ? `Simulation report attached (updated: ${upd}).` : "Simulation report attached.";
 
-  // ✅ Direct report.html load karo — localStorage data wahan se read hoga
-  try {
-    iframe.src = "report.html";
-    iframe.classList.remove("hidden");
-  } catch {
-    iframe.classList.add("hidden");
-    status.textContent = "Report saved, but preview couldn't render.";
-  }
-}
+      try {
+        iframe.setAttribute("scrolling", "no");
+        iframe.style.overflow = "hidden";
+        attachSimulationFrameAutoResize(iframe);
+        iframe.srcdoc = report.html;
+        iframe.classList.remove("hidden");
+        scheduleEmbeddedHeightSync();
+      } catch {
+        iframe.classList.add("hidden");
+        status.textContent = "Report saved, but preview couldn't render. Please open it in a new tab.";
+        cleanupSimulationFrameAutoResize(iframe);
+        scheduleEmbeddedHeightSync();
+      }
+    }
+
+    function getExportCaptureScale() {
+      return Math.min(3, Math.max(2.25, window.devicePixelRatio || 1.5));
+    }
+
+    async function captureSimulationGroupCanvas(reportDoc, nodes, scale) {
+      if (!reportDoc || !Array.isArray(nodes) || !nodes.length) return null;
+      if (typeof html2canvas !== "function") return null;
+
+       ensureReadableSimulationReportTypography(reportDoc);
+
+      const host = reportDoc.createElement("div");
+      host.style.position = "fixed";
+      host.style.left = "-100000px";
+      host.style.top = "0";
+      host.style.width = "1040px";
+      host.style.margin = "0";
+      host.style.padding = "0";
+      host.style.pointerEvents = "none";
+      host.style.zIndex = "-1";
+
+      const page = reportDoc.createElement("div");
+      page.style.maxWidth = "960px";
+      page.style.margin = "0 auto";
+      page.style.padding = "32px";
+      page.style.background = "#ffffff";
+      page.style.border = "1px solid #e5e9f2";
+      page.style.borderRadius = "16px";
+      page.style.boxShadow = "0 10px 30px rgba(31, 45, 61, 0.12)";
+      page.style.boxSizing = "border-box";
+
+      nodes.forEach((node) => {
+        if (node) page.appendChild(node.cloneNode(true));
+      });
+
+      host.appendChild(page);
+      reportDoc.body.appendChild(host);
+
+      try {
+        await waitForDocumentFonts(reportDoc);
+        await sleep(80);
+        return await html2canvas(page, {
+          scale,
+          useCORS: true,
+          allowTaint: true,
+          scrollX: 0,
+          scrollY: 0,
+          backgroundColor: "#ffffff"
+        });
+      } finally {
+        host.remove();
+      }
+    }
+
+    async function captureSimulationExportCanvases(frameEl, scale) {
+      if (!frameEl || frameEl.classList.contains("hidden")) return [];
+
+      await waitForIframeReady(frameEl, 6000);
+      await sleep(180);
+
+      const reportDoc = frameEl.contentDocument;
+      const reportRoot = reportDoc?.getElementById("report-root") || reportDoc?.body;
+      if (!reportDoc || !reportRoot) return [];
+
+      ensureReadableSimulationReportTypography(reportDoc);
+      await waitForDocumentFonts(reportDoc);
+
+      const reportPages = Array.from(reportRoot.querySelectorAll(".report-page"));
+      if (reportPages.length) {
+        const pageCanvases = [];
+        for (const reportPage of reportPages) {
+          const canvas = await captureSimulationGroupCanvas(reportDoc, [reportPage], scale);
+          if (canvas) pageCanvases.push(canvas);
+        }
+        return pageCanvases;
+      }
+
+      const header = reportRoot.querySelector(".header-row");
+      const sections = Array.from(reportRoot.querySelectorAll(".section"));
+      const groups = [];
+
+      const introGroup = [];
+      if (header) introGroup.push(header);
+      if (sections[0]) introGroup.push(sections[0]);
+      if (sections[1]) introGroup.push(sections[1]);
+      if (introGroup.length) groups.push(introGroup);
+
+      const observationAndGraphGroup = [];
+      if (sections[2]) observationAndGraphGroup.push(sections[2]);
+      if (sections[3]) observationAndGraphGroup.push(sections[3]);
+      if (observationAndGraphGroup.length) groups.push(observationAndGraphGroup);
+
+      for (let i = 4; i < sections.length; i++) {
+        groups.push([sections[i]]);
+      }
+
+      const canvases = [];
+      for (const group of groups) {
+        const canvas = await captureSimulationGroupCanvas(reportDoc, group, scale);
+        if (canvas) canvases.push(canvas);
+      }
+
+      return canvases;
+    }
+
     function sleep(ms = 0) {
       return new Promise((resolve) => setTimeout(resolve, ms));
     }
@@ -788,7 +1262,7 @@
       });
     }
 
-    async function captureSimulationFrameSnapshot(frameEl) {
+    async function captureSimulationFrameSnapshot(frameEl, scale = Math.min(2, window.devicePixelRatio || 1.5)) {
       if (!frameEl) return null;
       if (typeof html2canvas !== "function") return null;
 
@@ -801,8 +1275,11 @@
 
       const docEl = doc.documentElement;
 
+      ensureReadableSimulationReportTypography(doc);
+      await waitForDocumentFonts(doc);
+
       const canvas = await html2canvas(body, {
-        scale: Math.min(2, window.devicePixelRatio || 1.5),
+        scale,
         useCORS: true,
         allowTaint: true,
         scrollX: 0,
@@ -995,50 +1472,14 @@
       firstPageWrapper.appendChild(firstPageClone);
       appendWrapper(firstPageWrapper);
 
-      const simulationWrapper = createDetachedExportWrapper(width);
-      const liveSimulationSection = document.getElementById("reportSimulationSection");
-      let simulationClone = null;
-
-      if (liveSimulationSection) {
-        simulationClone = liveSimulationSection.cloneNode(true);
-      } else {
-        simulationClone = document.createElement("section");
-        simulationClone.className = "report-section";
-        simulationClone.innerHTML =
-          '<h2 class="report-section-title">Simulation Report</h2><p class="report-muted">Simulation report not found.</p>';
-      }
-
-      const frameClone = simulationClone.querySelector("#simulationReportFrame");
-      if (frameClone) {
-        const liveFrame = document.getElementById("simulationReportFrame");
-        let replacement = null;
-
-        try {
-          replacement = await captureSimulationFrameSnapshot(liveFrame);
-        } catch (err) {
-          console.error("Simulation frame snapshot failed", err);
-        }
-
-        if (!replacement) {
-          const fallback = document.createElement("div");
-          fallback.className = "p-4 text-sm text-slate-700 bg-slate-50 border-t border-slate-200";
-          fallback.textContent = currentSimulationReport?.html
-            ? "Simulation report is available on the page. Snapshot could not be captured for PDF."
-            : "Simulation report not found.";
-          replacement = fallback;
-        }
-
-        frameClone.replaceWith(replacement);
-      }
-
-      simulationWrapper.appendChild(simulationClone);
-      appendWrapper(simulationWrapper);
+      const liveFrame = document.getElementById("simulationReportFrame");
+      const simulationCanvases = await captureSimulationExportCanvases(liveFrame, getExportCaptureScale());
 
       await sleep(60);
 
       return {
         firstNode: firstPageWrapper,
-        simulationNode: simulationWrapper,
+        simulationCanvases,
         cleanup: () => wrappers.forEach((wrapper) => wrapper.remove())
       };
     }
@@ -1065,31 +1506,11 @@
 
     // Buttons
     
- const downloadBtn = document.getElementById("downloadBtn");
-const resetBtn = document.getElementById("resetBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
 
-downloadBtn?.addEventListener("click", downloadReportCanvas);
-resetBtn?.addEventListener("click", () => {
-  showReportAlert("Reset all saved user data, assessments, timings, and simulation report?", "Confirm Reset", {
-    mode: "confirm",
-    onYes: () => {
-      VLProgress.resetAll();
-      // Clear simulation report keys manually
-      try {
-        localStorage.removeItem("vlab_exp2_simulation_report_html");
-        localStorage.removeItem("vlab_exp2_simulation_report_updated_at");
-        localStorage.removeItem("tableData");
-        localStorage.removeItem("experimentReport");
-        localStorage.removeItem("reportStartTime");
-        localStorage.removeItem("reportEndTime");
-        localStorage.removeItem("reportDuration");
-        localStorage.removeItem("experimentStartTime");
-        localStorage.removeItem("experimentEndTime");
-      } catch(e) {}
-      showReportAlert("Reset done. Redirecting to Aim page.", "Reset Complete", { onClose: navigateToAim });
-    }
-  });
-});
+    
+    downloadBtn?.addEventListener("click", downloadReportCanvas);
+
     window.addEventListener("beforeprint", () => {
       expandSimulationFrameForPrint();
     });
@@ -1171,10 +1592,15 @@ resetBtn?.addEventListener("click", () => {
       let exportCleanup = null;
 
       try {
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "Preparing PDF...";
+        }
+
         const latestSimReport = getSimulationReportData();
         if (latestSimReport) currentSimulationReport = latestSimReport;
 
-        const captureScale = Math.min(2, window.devicePixelRatio || 1.5);
+        const captureScale = getExportCaptureScale();
         const captureOptions = {
           scale: captureScale,
           useCORS: true,
@@ -1185,17 +1611,23 @@ resetBtn?.addEventListener("click", () => {
         };
 
         const exportContext = await prepareExportNodes();
-        if (!exportContext?.firstNode || !exportContext?.simulationNode) {
+        if (!exportContext?.firstNode) {
           throw new Error("Report export context is unavailable.");
         }
         exportCleanup = exportContext.cleanup;
 
         const firstCanvas = await html2canvas(exportContext.firstNode, captureOptions);
-        const simulationCanvas = await html2canvas(exportContext.simulationNode, captureOptions);
+        const simulationCanvases = Array.isArray(exportContext.simulationCanvases)
+          ? exportContext.simulationCanvases.filter(Boolean)
+          : [];
 
         const pdf = new jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
         addCanvasFittedSinglePage(pdf, firstCanvas, 24);
-        appendCanvasPaged(pdf, simulationCanvas, { margin: 24, startNewPage: true });
+
+        for (const simulationCanvas of simulationCanvases) {
+          pdf.addPage();
+          addCanvasFittedSinglePage(pdf, simulationCanvas, 24);
+        }
 
         pdf.save("progress-report.pdf");
       } catch (error) {
@@ -1204,16 +1636,44 @@ resetBtn?.addEventListener("click", () => {
       } finally {
         if (exportCleanup) exportCleanup();
         if (btn) {
+          btn.disabled = false;
           if (typeof originalLabel === "string") btn.textContent = originalLabel;
         }
       }
     }
 
     reportLockedCTA?.addEventListener("click", () => redirectToUserInputForm("progressreport.html"));
+
+    window.addEventListener("resize", scheduleEmbeddedHeightSync);
+    window.addEventListener("load", scheduleEmbeddedHeightSync);
+    window.addEventListener("message", (event) => {
+      const allowedOrigin = window.location.origin;
+      const fromNullOrigin = event.origin === "null";
+      if (allowedOrigin !== "null" && event.origin !== allowedOrigin && !fromNullOrigin) return;
+
+      const data = event.data;
+      if (!data || !data.type) return;
+
+      if (data.type === "vlab:simulation_report_generated") {
+        const latestSimulationReport = getSimulationReportData();
+        if (latestSimulationReport?.html) {
+          currentSimulationReport = latestSimulationReport;
+          renderSimulationReport(latestSimulationReport);
+        }
+        scheduleEmbeddedHeightSync();
+        return;
+      }
+
+      if (data.type === "vlab:progress_report_height_request") {
+        scheduleEmbeddedHeightSync();
+      }
+    });
+
+    scheduleEmbeddedHeightSync();
   })();
   </script>
 
-  <script>  
+  <script>
     (function initHeaderNav() {
       const toggle = document.getElementById("mobile-menu-toggle");
       const nav = document.querySelector(".top-nav");

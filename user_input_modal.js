@@ -271,7 +271,9 @@
     anchors.forEach((a) => {
       a.removeAttribute("target");
       a.setAttribute("target", "_self");
-      if (!a.dataset.userInputDecorated) decorateUserInputLink(a);
+      if (a.hasAttribute("data-user-input-link") && !a.hasAttribute("data-mobile-user-input-link") && !a.dataset.userInputDecorated) {
+        decorateUserInputLink(a);
+      }
     });
   }
 
@@ -330,7 +332,7 @@
     const firstName = getFirstName(state?.user?.name);
     const designation = (state?.user?.designation || "").trim();
 
-    document.querySelectorAll('a[href*="user_input.html"]').forEach((a) => {
+    document.querySelectorAll('a[data-user-input-link]').forEach((a) => {
       const avatar = a.querySelector("[data-user-avatar]");
       const text = a.querySelector("[data-user-text]");
 
@@ -561,8 +563,8 @@
         return;
       }
 
-    if (data.type === "vlab:simulation_report_generated") {
-        const html = typeof data.html === "string" ? data.html : "1";
+      if (data.type === "vlab:simulation_report_generated") {
+        const html = typeof data.html === "string" ? data.html : "";
         const updatedAt = (data.updatedAt || String(Date.now())).toString();
         if (!html.trim()) return;
 

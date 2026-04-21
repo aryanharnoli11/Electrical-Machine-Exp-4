@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Virtual Labs | Electrical Machines Lab - Contributors</title>
-  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="./alert-theme.css">
   <style>
@@ -12,6 +12,7 @@
 
     body {
       font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
     }
 
     /* Page blur when intro popup is open */
@@ -418,6 +419,18 @@
       gap: 0.9rem;
       z-index: 90;
       max-width: calc(100vw - 32px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    body.sidebar-open .chatbot-widget {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+    }
+
+    @media (max-width: 1023px) {
+      #sidebar { z-index: 120 !important; }
+      #overlay { z-index: 110 !important; }
     }
 
     .chatbot-widget.chatbot-open .chatbot-hint-bubble,
@@ -541,6 +554,103 @@
       text-indent: 0; /* No indentation, use spacing instead */
     }
 
+    .contributors-main {
+      min-width: 0;
+      padding-bottom: 6rem;
+    }
+
+    .contributors-content {
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .contributors-table-wrap {
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-gutter: stable;
+    }
+
+    .contributors-table {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+    }
+
+    @media (max-width: 1023px) {
+      .contributors-main {
+        padding: 1rem !important;
+        padding-bottom: 6rem !important;
+      }
+
+      .contributors-content {
+        padding: 1rem !important;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .contributors-table-wrap {
+        overflow: visible;
+      }
+
+      .contributors-table {
+        min-width: 0;
+      }
+
+      .contributors-table,
+      .contributors-table tbody,
+      .contributors-table tr,
+      .contributors-table td {
+        display: block;
+        width: 100%;
+      }
+
+      .contributors-table thead {
+        display: none;
+      }
+
+      .contributors-table tbody {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .contributors-table tr {
+        border: 1px solid #d1d5db;
+        border-radius: 0.9rem;
+        overflow: hidden;
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+        background: #ffffff;
+      }
+
+      .contributors-table td {
+        display: grid;
+        grid-template-columns: minmax(88px, 108px) minmax(0, 1fr);
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        text-align: left !important;
+        border: 0 !important;
+        border-bottom: 1px solid #e5e7eb !important;
+        overflow-wrap: anywhere;
+      }
+
+      .contributors-table td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .contributors-table td:last-child {
+        border-bottom: 0 !important;
+      }
+
+      .contributors-section-title {
+        font-size: 1.125rem !important;
+        line-height: 1.4;
+      }
+    }
+
     @media (max-width: 640px) {
       .chatbot-widget {
         bottom: 16px;
@@ -573,7 +683,7 @@
         <!-- Logo Section - Absolute Left Corner -->
         <a href="../../main.html" class="logo-container hover:no-underline focus:no-underline"> <!-- Made logo clickable -->
           <img 
-            src="images/logo.png"  
+            src="./images/image.png"  
             alt="Virtual Labs Logo" 
             class="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-xl object-contain bg-white p-1.5 logo-glow"
             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%230b60a8%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2255%22 font-size=%2240%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22 font-weight=%22bold%22%3EVL%3C/text%3E%3C/svg%3E'"
@@ -590,6 +700,8 @@
           id="mobile-menu-toggle" 
           class="lg:hidden text-white p-2 menu-button"
           aria-label="Toggle menu"
+          aria-controls="sidebar"
+          aria-expanded="false"
         >
           <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -597,7 +709,7 @@
         </button>
 
         <!-- Desktop Navigation (Optional) -->
-         <nav class="top-nav hidden lg:flex items-center">
+         <nav class="top-nav hidden lg:flex items-center gap-2 lg:gap-3">
             <a href="../../main.html" class="nav-link">Home</a>
             <a href="user_input.html?return=contributors.html" class="nav-link nav-user-link" data-user-input-link data-redirect-return="contributors.html">
               <span class="nav-user-pill">
@@ -613,7 +725,7 @@
 
  <div class="flex pt-16 min-h-screen">
     <!-- Sidebar -->
-    <aside id="sidebar" class="vl-sidebar w-64 fixed inset-y-0 left-0 z-40 overflow-y-auto transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out pt-20 lg:pt-6 pb-6">
+    <aside id="sidebar" class="vl-sidebar w-64 fixed inset-y-0 left-0 z-50 overflow-y-auto transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out pt-20 lg:pt-6 pb-6">
       <div class="px-4">
         <h2 class="text-lg font-semibold text-gray-800 mb-6 border-b border-gray-200 pb-4">Experiment Navigation</h2>
         <nav class="space-y-1">
@@ -698,10 +810,10 @@
     <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden"></div>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 lg:ml-64 p-6">
+    <main class="contributors-main flex-1 lg:ml-64 p-4 sm:p-6 pb-24">
 
       <!-- Breadcrumb -->
-       <nav class="mb-6 text-m text-gray-600 animate-slideInLeft flex items-center space-x-2">
+       <nav class="mb-6 text-sm sm:text-base text-gray-600 animate-slideInLeft flex flex-wrap items-center gap-x-2 gap-y-1">
         <a href="#" class="hover:text-blue-600 transition-colors">Home</a>
         <span>></span>
         <a href="#" class="hover:text-blue-600">Electrical Machines Lab</a>
@@ -713,19 +825,19 @@
       <div class="vl-card mb-4 overflow-hidden animate-fadeInUp rounded-lg">
         <div class="px-4 py-3" style="background: linear-gradient(120deg, #021a2c, #064073, #0b60a8);">
           <h1 class="text-lg md:text-xl font-bold text-white text-center leading-snug">
-            Speed Control of DC motor by Armature Resistance Control
+            To study the Load Characteristics of DC shunt generator
           </h1>
         </div>
       </div>
 
       <!-- CONTRIBUTORS TABLE -->
-      <section class="section-content vl-card p-6 animate-fadeInUp">
+      <section class="section-content vl-card p-4 sm:p-6 animate-fadeInUp contributors-content">
         <div class="border-l-4 border-blue-600 pl-4 mb-4">
-          <h2 class="text-2xl font-bold text-gray-800">Lab Proposer / Subject Matter Experts</h2>
+          <h2 class="contributors-section-title text-xl sm:text-2xl font-bold text-gray-800">Lab Proposer / Subject Matter Experts</h2>
         </div>
 
-        <div class="overflow-x-auto mt-4">
-          <table class="min-w-full border border-gray-300 bg-white rounded-lg">
+        <div class="contributors-table-wrap mt-4">
+          <table class="contributors-table border border-gray-300 bg-white rounded-lg">
             <thead class="bg-gray-100">
               <tr class="text-left text-gray-700 text-center">
                 <th class="border p-2">S.No.</th>
@@ -738,21 +850,21 @@
 
             <tbody>
               <tr class="text-gray-700 text-center">
-                <td class="border p-2">1</td>
-                <td class="border p-2">Dr RS Anand</td>
-                <td class="border p-2">anandfee@gmail.com</td>
-                <td class="border p-2">IIT Roorkee</td>
-                <td class="border p-2">Professor</td>
+                <td class="border p-2" data-label="S.No.">1</td>
+                <td class="border p-2" data-label="Name">Dr RS Anand</td>
+                <td class="border p-2" data-label="Email ID">anandfee@gmail.com</td>
+                <td class="border p-2" data-label="Institute">IIT Roorkee</td>
+                <td class="border p-2" data-label="Position">Professor</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div class="border-l-4 border-blue-600 pl-4 mb-4 mt-10">
-          <h2 class="text-2xl font-bold text-gray-800">Lab Contributed By</h2>
+        <div class="border-l-4 border-blue-600 pl-4 mb-4 mt-8 sm:mt-10">
+          <h2 class="contributors-section-title text-xl sm:text-2xl font-bold text-gray-800">Lab Contributed By</h2>
         </div>
 
-        <div class="overflow-x-auto mt-4">
-          <table class="min-w-full border border-gray-300 bg-white rounded-lg">
+        <div class="contributors-table-wrap mt-4">
+          <table class="contributors-table border border-gray-300 bg-white rounded-lg">
             <thead class="bg-gray-100">
               <tr class="text-left text-gray-700 text-center">
                 <th class="border p-2">S.No.</th>
@@ -765,11 +877,11 @@
 
             <tbody>
               <tr class="text-gray-700 text-center">
-                <td class="border p-2">1</td>
-                <td class="border p-2">Priyanshu Baranwal</td>
-                <td class="border p-2">priyanshubaranwal00@gmail.com</td>
-                <td class="border p-2">IIT Roorkee</td>
-                <td class="border p-2">Project Intern</td>
+                <td class="border p-2" data-label="S.No.">1</td>
+                <td class="border p-2" data-label="Name">Neha</td>
+                <td class="border p-2" data-label="Email ID">nehasaniya465@gmail.com</td>
+                <td class="border p-2" data-label="Institute">IIT Roorkee</td>
+                <td class="border p-2" data-label="Position">Project Associate</td>
               </tr>
             </tbody>
           </table>
@@ -777,11 +889,11 @@
       </section>
 
       <section id="progressreport"
-               class="section-content vl-card mb-8 p-6 animate-fadeInUp hidden">
+               class="section-content vl-card mb-8 p-4 sm:p-6 animate-fadeInUp hidden">
 
-        <div class="border-l-4 border-orange-600 pl-4 mb-4 flex items-center justify-between">
+        <div class="border-l-4 border-orange-600 pl-4 mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div class="flex items-center">
-            <h2 class="text-2xl font-bold text-gray-800">
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800">
               Progress Report
             </h2>
           </div>
@@ -821,20 +933,50 @@
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('overlay');
     const toggleBtn = document.getElementById('mobile-menu-toggle');
+    const mobileSidebarQuery = window.matchMedia('(max-width: 1023px)');
 
-    toggleBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('-translate-x-full');
-      overlay.classList.toggle('hidden');
+    function setSidebarOpen(isOpen) {
+      const shouldOpen = Boolean(isOpen) && mobileSidebarQuery.matches;
+      if (sidebar) sidebar.classList.toggle('-translate-x-full', !shouldOpen);
+      if (overlay) overlay.classList.toggle('hidden', !shouldOpen);
+      document.body.classList.toggle('overflow-hidden', shouldOpen);
+      document.body.classList.toggle('sidebar-open', shouldOpen);
+      if (toggleBtn) toggleBtn.setAttribute('aria-expanded', String(shouldOpen));
+
+      const chatbotWidget = document.querySelector('.chatbot-widget');
+      const chatbotPanel = chatbotWidget?.querySelector('.chatbot-panel');
+      const chatbotLauncher = chatbotWidget?.querySelector('.chatbot-launcher');
+      if (shouldOpen && chatbotWidget && chatbotPanel?.classList.contains('open')) {
+        chatbotPanel.classList.remove('open');
+        chatbotWidget.classList.remove('chatbot-open');
+        chatbotLauncher?.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        const isClosed = !sidebar || sidebar.classList.contains('-translate-x-full');
+        setSidebarOpen(isClosed);
+      });
+    }
+
+    if (overlay) {
+      overlay.addEventListener('click', () => setSidebarOpen(false));
+    }
+
+    document.querySelectorAll('#sidebar a').forEach(link => {
+      link.addEventListener('click', () => {
+        if (mobileSidebarQuery.matches) setSidebarOpen(false);
+      });
     });
 
-    overlay.addEventListener('click', () => {
-      sidebar.classList.add('-translate-x-full');
-      overlay.classList.add('hidden');
+    window.addEventListener('resize', () => {
+      if (!mobileSidebarQuery.matches) setSidebarOpen(false);
     });
   </script>
 
   <div class="chatbot-widget">
-    <div class="chatbot-panel" data-chat-url="https://vlab-exp-2.netlify.app/">
+    <div class="chatbot-panel" data-chat-url="https://electrical-machine-exp-2.netlify.app/">
       <div class="chatbot-panel-header">
         <div>
           <p class="chatbot-panel-title">Virtual Lab Assistant</p>
@@ -886,6 +1028,27 @@
 
       let isLoaded = false;
       let autoCloseTimer = null;
+
+      function playNotification() {
+        if (!notifyAudio) return;
+        try {
+          const maybePromise = notifyAudio.play();
+          if (maybePromise && typeof maybePromise.catch === 'function') {
+            maybePromise.catch(function () {});
+          }
+        } catch (e) {}
+      }
+
+      function scheduleAutoOpen() {
+        if (document.body.classList.contains('sidebar-open')) return;
+        playNotification();
+        if (!panel.classList.contains('open')) openPanel();
+
+        if (autoCloseTimer) clearTimeout(autoCloseTimer);
+        autoCloseTimer = setTimeout(function () {
+          if (panel.classList.contains('open')) closePanel();
+        }, 3000);
+      }
  
       function openPanel() {
         panel.classList.add('open');

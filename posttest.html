@@ -459,6 +459,18 @@
       gap: 0.9rem;
       z-index: 90;
       max-width: calc(100vw - 32px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    body.sidebar-open .chatbot-widget {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+    }
+
+    @media (max-width: 1023px) {
+      #sidebar { z-index: 120 !important; }
+      #overlay { z-index: 110 !important; }
     }
     .chatbot-widget.chatbot-open .chatbot-hint-bubble,
     .chatbot-widget:hover .chatbot-hint-bubble {
@@ -591,7 +603,7 @@
       <div class="flex items-center justify-between py-1 w-full gap-3">
         <a href="../../main.html" class="logo-container hover:no-underline focus:no-underline">
           <img 
-             src="images/logo.png" 
+             src="./images/image.png" 
             alt="Virtual Labs Logo" 
             class="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-xl object-contain bg-white p-1.5 logo-glow"
             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%230b60a8%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2255%22 font-size=%2240%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22 font-weight=%22bold%22%3EVL%3C/text%3E%3C/svg%3E'"
@@ -606,6 +618,8 @@
           id="mobile-menu-toggle" 
           class="lg:hidden text-white p-2 menu-button"
           aria-label="Toggle menu"
+          aria-controls="sidebar"
+          aria-expanded="false"
         >
           <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -628,7 +642,7 @@
 
  <div class="flex pt-16 min-h-screen">
     <!-- Sidebar -->
-    <aside id="sidebar" class="vl-sidebar w-64 fixed inset-y-0 left-0 z-40 overflow-y-auto transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out pt-20 lg:pt-6 pb-6">
+    <aside id="sidebar" class="vl-sidebar w-64 fixed inset-y-0 left-0 z-50 overflow-y-auto transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out pt-20 lg:pt-6 pb-6">
       <div class="px-4">
         <h2 class="text-lg font-semibold text-gray-800 mb-6 border-b border-gray-200 pb-4">Experiment Navigation</h2>
         <nav class="space-y-1">
@@ -713,13 +727,13 @@
         <span>></span>
         <a href="#" class="hover:text-blue-600">Electrical Machines Lab</a>
         <span>></span>
-        <span class="text-gray-800 font-medium">Pretest</span>
+        <span class="text-gray-800 font-medium">Posttest</span>
       </nav>
       <!-- TITLE CARD -->
       <div class="vl-card mb-4 overflow-hidden animate-fadeInUp rounded-lg">
         <div class="px-4 py-3" style="background: linear-gradient(120deg, #021a2c, #064073, #0b60a8);">
           <h1 class="text-lg md:text-xl font-bold text-white text-center leading-snug">
-          Speed Control of DC motor by Armature Resistance Control
+            To study the Load Characteristics of DC shunt generator
           </h1>
         </div>
       </div>
@@ -827,33 +841,138 @@ const result = document.getElementById("result");
 const refreshBtn = document.getElementById("refresh-btn");
 const checkBtn = document.getElementById("check-btn");
 
-let currentSetIndices = []; // indices into `questions` array for the current shown set
-let setLocked = false;
-let totalCorrect = readStoredNumber("vlab_exp2_posttest_score");
-let totalAttempted = readStoredNumber("vlab_exp2_posttest_total");
-let hasRenderedSet = false;
+const ASSESSMENT_KEYS = {
+  score: "vlab_exp2_posttest_score",
+  total: "vlab_exp2_posttest_total",
+  attemptedIds: "vlab_exp2_posttest_attempted_ids",
+  correctIds: "vlab_exp2_posttest_correct_ids",
+  updatedAt: "vlab_exp2_posttest_updated_at"
+};
 
-function readStoredNumber(key) {
+function readWindowNameData() {
+  const PREFIX = "VLAB_EXP2::";
   try {
-    const raw = localStorage.getItem(key);
-    const n = Number(raw);
-    return Number.isFinite(n) && n >= 0 ? n : 0;
-  } catch {
-    return 0;
+    if (typeof window.name === "string" && window.name.startsWith(PREFIX)) {
+      return JSON.parse(window.name.slice(PREFIX.length)) || {};
+    }
+  } catch (e) {}
+  return {};
+}
+
+function getUserScopedStorageKey(baseKey) {
+  try {
+    const activeHash = localStorage.getItem("vlab_exp2_active_user_hash");
+    if (!activeHash) return "";
+    return `vlab_exp2_user_${activeHash}_${baseKey.replace(/^vlab_exp2_/, "")}`;
+  } catch (e) {
+    return "";
   }
 }
 
-function persistAssessmentTotals() {
-  const now = String(Date.now());
+function readStoredValue(key) {
+  const userScopedKey = getUserScopedStorageKey(key);
+  const candidateKeys = userScopedKey ? [userScopedKey, key] : [key];
+
+  for (const candidateKey of candidateKeys) {
+    try {
+      const raw = localStorage.getItem(candidateKey);
+      if (raw !== null && raw !== undefined && String(raw).trim() !== "") {
+        return String(raw);
+      }
+    } catch (e) {}
+  }
+
+  const windowNameData = readWindowNameData();
+  const fallback = windowNameData[key];
+  return fallback !== undefined && fallback !== null ? String(fallback) : "";
+}
+
+function readStoredNumber(key) {
+  const n = Number(readStoredValue(key));
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+function readStoredIdSet(key) {
+  const raw = readStoredValue(key);
+  if (!raw) return new Set();
+
   try {
-    localStorage.setItem("vlab_exp2_posttest_score", String(totalCorrect));
-    localStorage.setItem("vlab_exp2_posttest_total", String(totalAttempted));
-    localStorage.setItem("vlab_exp2_posttest_updated_at", now);
-    const activeHash = localStorage.getItem("vlab_exp2_active_user_hash");
-    if (activeHash) {
-      localStorage.setItem(`vlab_exp2_user_${activeHash}_posttest_score`, String(totalCorrect));
-      localStorage.setItem(`vlab_exp2_user_${activeHash}_posttest_total`, String(totalAttempted));
-      localStorage.setItem(`vlab_exp2_user_${activeHash}_posttest_updated_at`, now);
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.map((value) => String(value)).filter(Boolean));
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function buildLegacyIdSet(count) {
+  const ids = new Set();
+  for (let i = 1; i <= count; i++) {
+    ids.add(`legacy-q-${i}`);
+  }
+  return ids;
+}
+
+function limitIdSet(sourceSet, maxSize) {
+  return new Set(Array.from(sourceSet).slice(0, Math.max(0, maxSize)));
+}
+
+function getQuestionAttemptKey(questionId) {
+  return `q-${questionId}`;
+}
+
+let currentSetIndices = []; // indices into `questions` array for the current shown set
+let setLocked = false;
+let attemptedQuestionIds = readStoredIdSet(ASSESSMENT_KEYS.attemptedIds);
+let correctQuestionIds = readStoredIdSet(ASSESSMENT_KEYS.correctIds);
+
+if (!attemptedQuestionIds.size && !correctQuestionIds.size) {
+  const legacyAttemptedCount = Math.min(questions.length, readStoredNumber(ASSESSMENT_KEYS.total));
+  const legacyCorrectCount = Math.min(legacyAttemptedCount, readStoredNumber(ASSESSMENT_KEYS.score));
+  attemptedQuestionIds = buildLegacyIdSet(legacyAttemptedCount);
+  correctQuestionIds = buildLegacyIdSet(legacyCorrectCount);
+}
+
+let totalCorrect = 0;
+let totalAttempted = 0;
+let hasRenderedSet = false;
+
+function syncAssessmentTotals() {
+  attemptedQuestionIds = limitIdSet(attemptedQuestionIds, questions.length);
+  correctQuestionIds = limitIdSet(
+    new Set(Array.from(correctQuestionIds).filter((id) => attemptedQuestionIds.has(id))),
+    attemptedQuestionIds.size
+  );
+  totalAttempted = attemptedQuestionIds.size;
+  totalCorrect = correctQuestionIds.size;
+}
+
+syncAssessmentTotals();
+
+function persistAssessmentTotals() {
+  syncAssessmentTotals();
+  const now = String(Date.now());
+  const attemptedIdsJson = JSON.stringify(Array.from(attemptedQuestionIds));
+  const correctIdsJson = JSON.stringify(Array.from(correctQuestionIds));
+  try {
+    localStorage.setItem(ASSESSMENT_KEYS.score, String(totalCorrect));
+    localStorage.setItem(ASSESSMENT_KEYS.total, String(totalAttempted));
+    localStorage.setItem(ASSESSMENT_KEYS.attemptedIds, attemptedIdsJson);
+    localStorage.setItem(ASSESSMENT_KEYS.correctIds, correctIdsJson);
+    localStorage.setItem(ASSESSMENT_KEYS.updatedAt, now);
+
+    const scopedScoreKey = getUserScopedStorageKey(ASSESSMENT_KEYS.score);
+    const scopedTotalKey = getUserScopedStorageKey(ASSESSMENT_KEYS.total);
+    const scopedAttemptedIdsKey = getUserScopedStorageKey(ASSESSMENT_KEYS.attemptedIds);
+    const scopedCorrectIdsKey = getUserScopedStorageKey(ASSESSMENT_KEYS.correctIds);
+    const scopedUpdatedAtKey = getUserScopedStorageKey(ASSESSMENT_KEYS.updatedAt);
+
+    if (scopedScoreKey) {
+      localStorage.setItem(scopedScoreKey, String(totalCorrect));
+      localStorage.setItem(scopedTotalKey, String(totalAttempted));
+      localStorage.setItem(scopedAttemptedIdsKey, attemptedIdsJson);
+      localStorage.setItem(scopedCorrectIdsKey, correctIdsJson);
+      localStorage.setItem(scopedUpdatedAtKey, now);
     }
   } catch (e) {}
 
@@ -863,29 +982,44 @@ function persistAssessmentTotals() {
     if (typeof window.name === "string" && window.name.startsWith(PREFIX)) {
       data = JSON.parse(window.name.slice(PREFIX.length)) || {};
     }
-    data["vlab_exp2_posttest_score"] = String(totalCorrect);
-    data["vlab_exp2_posttest_total"] = String(totalAttempted);
-    data["vlab_exp2_posttest_updated_at"] = now;
+    data[ASSESSMENT_KEYS.score] = String(totalCorrect);
+    data[ASSESSMENT_KEYS.total] = String(totalAttempted);
+    data[ASSESSMENT_KEYS.attemptedIds] = attemptedIdsJson;
+    data[ASSESSMENT_KEYS.correctIds] = correctIdsJson;
+    data[ASSESSMENT_KEYS.updatedAt] = now;
     window.name = PREFIX + JSON.stringify(data);
   } catch (e) {}
 }
 
+persistAssessmentTotals();
+
 /* ------------------ UTIL: pick random unique set ------------------ */
 function pickRandomSet() {
+  const remainingIndices = questions
+    .map((question, index) => attemptedQuestionIds.has(getQuestionAttemptKey(question.id)) ? null : index)
+    .filter((index) => index !== null);
+
   // Fisher-Yates shuffle on index array, then slice first `size`
-  const indices = Array.from({length: questions.length}, (_, i) => i);
+  const indices = remainingIndices.length
+    ? [...remainingIndices]
+    : Array.from({ length: questions.length }, (_, i) => i);
+
   for (let i = indices.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [indices[i], indices[j]] = [indices[j], indices[i]];
   }
-  currentSetIndices = indices.slice(0, size);
-  // reset selections for the newly chosen questions
+
+  currentSetIndices = indices.slice(0, Math.min(size, indices.length));
   currentSetIndices.forEach(idx => questions[idx].selected = null);
   setLocked = false;
   showPage();
 
   if (hasRenderedSet) {
-    showPopup("Questions refreshed. A new set has been loaded.", "Refreshed");
+    if (remainingIndices.length) {
+      showPopup("Questions refreshed. A new set has been loaded.", "Refreshed");
+    } else {
+      showPopup("All 20 questions have already been counted. Overall marks will remain out of 20.", "Completed");
+    }
   } else {
     hasRenderedSet = true;
   }
@@ -947,7 +1081,7 @@ function updateCheckButtonState() {
 }
 
 const POSTTEST_WELCOME_ALERT_MESSAGE = "Here, you will receive 5 questions at a time. Each time you click on the Refresh button, a new set of questions will be generated. Please note that all your attempted questions will be recorded and reflected in your Progress Report if you choose to generate it.";
-const POSTTEST_WELCOME_ALERT_AUDIO_SRC = "./pagesaudio/pretestpostestaudio.wav";
+const POSTTEST_WELCOME_ALERT_AUDIO_SRC = "./audio/pretestpostestaudio.wav";
 let popupOnClose = null;
 
 function playMappedAlertAudio(soundEl, message) {
@@ -992,7 +1126,7 @@ function showPopup(message, title = "Alert", options = {}) {
 
   modal.classList.add("show");
   document.body.classList.add("is-modal-open");
-window.setTimeout(() => okBtn?.focus?.({ preventScroll: true }), 0);    
+  window.setTimeout(() => okBtn?.focus?.(), 0);
 
   playMappedAlertAudio(sound, message);
 }
@@ -1095,9 +1229,11 @@ function checkAnswers() {
 
   currentSetIndices.forEach(qIndex => {
     const q = questions[qIndex];
-    // find the selected input (if any) for this question
+    const questionKey = getQuestionAttemptKey(q.id);
     const selectedInput = container.querySelector(`input[name="q${q.id}"]:checked`);
-    if (selectedInput.value === q.answer) {
+    const isCorrect = selectedInput.value === q.answer;
+
+    if (isCorrect) {
       score++;
       selectedInput.parentElement.classList.remove("selected-option", "disabled-option");
       selectedInput.parentElement.classList.add("text-green-600", "correct-option");
@@ -1110,11 +1246,17 @@ function checkAnswers() {
         correctInput.parentElement.classList.add("text-green-600", "correct-option");
       }
     }
+
+    // Count only the first attempt for each unique question.
+    if (!attemptedQuestionIds.has(questionKey) && attemptedQuestionIds.size < questions.length) {
+      attemptedQuestionIds.add(questionKey);
+      if (isCorrect) {
+        correctQuestionIds.add(questionKey);
+      }
+    }
   });
 
   const setTotal = currentSetIndices.length;
-  totalCorrect += score;
-  totalAttempted += setTotal;
   persistAssessmentTotals();
 
   result.innerHTML = `Set Score: ${score} / ${setTotal} • Overall Score: ${totalCorrect} / ${totalAttempted}`;
@@ -1143,7 +1285,7 @@ showPopup(posttestWelcomeMessage, "Welcome to the Posttest section");
 
 <!-- CHATBOT WIDGET -->
 <div class="chatbot-widget">
-  <div class="chatbot-panel" data-chat-url="https://vlab-exp-2.netlify.app/">
+  <div class="chatbot-panel" data-chat-url="https://electrical-machine-exp-2.netlify.app/">
     <div class="chatbot-panel-header">
       <div>
         <p class="chatbot-panel-title">Virtual Lab Assistant</p>
@@ -1198,6 +1340,27 @@ showPopup(posttestWelcomeMessage, "Welcome to the Posttest section");
 
       let isLoaded = false;
       let autoCloseTimer = null;
+
+      function playNotification() {
+        if (!notifyAudio) return;
+        try {
+          const maybePromise = notifyAudio.play();
+          if (maybePromise && typeof maybePromise.catch === 'function') {
+            maybePromise.catch(function () {});
+          }
+        } catch (e) {}
+      }
+
+      function scheduleAutoOpen() {
+        if (document.body.classList.contains('sidebar-open')) return;
+        playNotification();
+        if (!panel.classList.contains('open')) openPanel();
+
+        if (autoCloseTimer) clearTimeout(autoCloseTimer);
+        autoCloseTimer = setTimeout(function () {
+          if (panel.classList.contains('open')) closePanel();
+        }, 3000);
+      }
  
       function openPanel() {
         panel.classList.add('open');
@@ -1253,6 +1416,51 @@ showPopup(posttestWelcomeMessage, "Welcome to the Posttest section");
   <script src="./user_input_modal.js"></script>
   <script src="./progress_tracker.js"></script>
   <script src="./progress_report_embed.js"></script>
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const toggleBtn = document.getElementById('mobile-menu-toggle');
+    const mobileSidebarQuery = window.matchMedia('(max-width: 1023px)');
+
+    function setSidebarOpen(isOpen) {
+      const shouldOpen = Boolean(isOpen) && mobileSidebarQuery.matches;
+      if (sidebar) sidebar.classList.toggle('-translate-x-full', !shouldOpen);
+      if (overlay) overlay.classList.toggle('hidden', !shouldOpen);
+      document.body.classList.toggle('overflow-hidden', shouldOpen);
+      document.body.classList.toggle('sidebar-open', shouldOpen);
+      if (toggleBtn) toggleBtn.setAttribute('aria-expanded', String(shouldOpen));
+
+      const chatbotWidget = document.querySelector('.chatbot-widget');
+      const chatbotPanel = chatbotWidget?.querySelector('.chatbot-panel');
+      const chatbotLauncher = chatbotWidget?.querySelector('.chatbot-launcher');
+      if (shouldOpen && chatbotWidget && chatbotPanel?.classList.contains('open')) {
+        chatbotPanel.classList.remove('open');
+        chatbotWidget.classList.remove('chatbot-open');
+        chatbotLauncher?.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        const isClosed = !sidebar || sidebar.classList.contains('-translate-x-full');
+        setSidebarOpen(isClosed);
+      });
+    }
+
+    if (overlay) {
+      overlay.addEventListener('click', () => setSidebarOpen(false));
+    }
+
+    document.querySelectorAll('#sidebar a').forEach(link => {
+      link.addEventListener('click', () => {
+        if (mobileSidebarQuery.matches) setSidebarOpen(false);
+      });
+    });
+
+    window.addEventListener('resize', () => {
+      if (!mobileSidebarQuery.matches) setSidebarOpen(false);
+    });
+  </script>
   <script>
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function (e) {

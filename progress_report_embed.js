@@ -280,6 +280,48 @@
     return shouldEmbedProgress() ? '#progressreport' : 'progressreport.html';
   }
 
+  function getEmbeddedProgressIframes(root = document) {
+    return Array.from(root.querySelectorAll('iframe[title="Progress Report"]'));
+  }
+
+  function requestEmbeddedProgressHeight(frame) {
+    if (!frame) return;
+    try {
+      frame.contentWindow?.postMessage({ type: 'vlab:progress_report_height_request' }, '*');
+    } catch (error) {}
+  }
+
+  function setEmbeddedProgressIframeHeight(height, sourceWindow = null) {
+    const parsedHeight = Number(height);
+    if (!Number.isFinite(parsedHeight)) return;
+
+    const nextHeight = Math.max(640, Math.ceil(parsedHeight));
+    getEmbeddedProgressIframes().forEach((frame) => {
+      if (sourceWindow && frame.contentWindow && frame.contentWindow !== sourceWindow) return;
+      const currentHeight = parseFloat(frame.style.height) || frame.getBoundingClientRect().height || 0;
+      if (Math.abs(currentHeight - nextHeight) <= 1) return;
+      frame.style.height = `${nextHeight}px`;
+      frame.style.minHeight = `${nextHeight}px`;
+      frame.style.overflow = 'hidden';
+      frame.setAttribute('scrolling', 'no');
+    });
+  }
+
+  function prepareEmbeddedProgressFrames(root = document) {
+    getEmbeddedProgressIframes(root).forEach((frame) => {
+      frame.style.overflow = 'hidden';
+      frame.setAttribute('scrolling', 'no');
+
+      if (frame.dataset.progressHeightBound === '1') return;
+      frame.dataset.progressHeightBound = '1';
+      frame.addEventListener('load', () => {
+        requestEmbeddedProgressHeight(frame);
+        window.setTimeout(() => requestEmbeddedProgressHeight(frame), 250);
+        window.setTimeout(() => requestEmbeddedProgressHeight(frame), 1000);
+      });
+    });
+  }
+
   function ensureProgressSection(main) {
     // Embedding is disabled.
     return;
@@ -331,6 +373,7 @@
       link.setAttribute('target', '_self');
       link.setAttribute('rel', 'noopener');
     });
+    prepareEmbeddedProgressFrames(root);
   }
 
   function markHeaderProgressLinks(isAimPage) {
@@ -408,6 +451,7 @@
     ensureAlertThemeCss();
     ensureProgressNoHoverStyles();
     forceSameTabProgressLinks();
+    prepareEmbeddedProgressFrames();
 
     const pageName = getPageName();
     const isAimPage = pageName === 'aim.html';
@@ -728,6 +772,14 @@
       const data = event.data;
       if (!data || !data.type) return;
 
+      if (data.type === 'vlab:progress_report_height') {
+        const nextHeight = Number(data.height);
+        if (Number.isFinite(nextHeight)) {
+          setEmbeddedProgressIframeHeight(nextHeight, event.source);
+        }
+        return;
+      }
+
       if (data.type === 'vlab:simulation_report_generated') {
         const html = typeof data.html === 'string' ? data.html : '';
         const updatedAt = (data.updatedAt || String(Date.now())).toString();
@@ -760,6 +812,7 @@
           if (iframe) {
             try {
               iframe.contentWindow?.postMessage({ type: 'vlab:simulation_report_generated' }, '*');
+              iframe.contentWindow?.postMessage({ type: 'vlab:progress_report_height_request' }, '*');
             } catch (e) {
               iframe.src = iframe.src;
             }
