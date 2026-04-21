@@ -1044,7 +1044,7 @@
     let popupOnNo = null;
     const SIMULATION_TABS_ALERT_MESSAGE =
       "The Simulation section contains two tabs. The Demo tab provides a guided walkthrough on how to run the simulation, while the Simulation tab allows you to perform the experiment independently.\n\nClick on the Demo tab to view the demo.";
-    const SIMULATION_DEMO_REMINDER_ALERT_MESSAGE = "I hope you’ve completed the demo.";
+    const SIMULATION_DEMO_REMINDER_ALERT_MESSAGE = "I hope you've completed the demo.";
     const SIMULATION_DEMO_REQUIRED_ALERT_MESSAGE = "To proceed further, please complete the demo first.";
     const SIMULATION_ALERT_AUDIO_SOURCES = {
       [SIMULATION_TABS_ALERT_MESSAGE]: "./audio/simulationsection.wav",
@@ -1226,21 +1226,26 @@
     })();
 
     (function initSimulationLinkReminder() {
-      const links = document.querySelectorAll('a[href*="simulation/static/index.html"]');
+      const links = document.querySelectorAll('#v2-card a.cta-link[href], a[href*="simulation/static/index.html"]');
       if (!links.length) return;
 
       links.forEach((link) => {
         link.addEventListener('click', (event) => {
-          const url = link.getAttribute('href') || link.href;
+          const url = link.href;
           if (!url) return;
           event.preventDefault();
-        showPopup(SIMULATION_DEMO_REMINDER_ALERT_MESSAGE, 'Reminder', {
-          mode: 'confirm',
-          center: true,
-          onYes: () => {
-            window.open(url, '_blank');
-          }
-        });
+          showPopup(SIMULATION_DEMO_REMINDER_ALERT_MESSAGE, 'Reminder', {
+            mode: 'confirm',
+            center: true,
+            onYes: () => {
+              const target = (link.getAttribute('target') || '_self').toLowerCase();
+              if (target === '_blank') {
+                window.open(url, '_blank', 'noopener');
+              } else {
+                window.location.assign(url);
+              }
+            }
+          });
         });
       });
     })();

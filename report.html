@@ -279,6 +279,17 @@
       .header-row {
         break-after: avoid;
       }
+
+      .graph-page-break {
+        break-before: page;
+        page-break-before: always;
+      }
+
+      .graph-page-break .graph-section,
+      .graph-page-break h2 {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
     }
   </style>
 </head>
@@ -365,7 +376,7 @@
   </div>
 
   <!-- ── GRAPH ── -->
-  <div class="section">
+  <div class="section graph-page-break">
     <h2>Graph</h2>
     <div class="graph-section">
       <div id="report-graph"></div>
@@ -601,6 +612,7 @@
           margin:     [0.3, 0.3, 0.3, 0.3],
           filename:   "simulation-report.pdf",
           image:      { type: "jpeg", quality: 0.98 },
+          pagebreak:  { mode: ["css", "legacy"] },
           html2canvas: {
             scale:   2,
             useCORS: true,

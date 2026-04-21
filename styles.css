@@ -1125,6 +1125,19 @@
             z-index: 5;
         }
 
+        .graph-print-image-main {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            padding: clamp(12px, 2vw, 16px);
+            display: none;
+            object-fit: contain;
+            pointer-events: none;
+            z-index: 6;
+        }
+
         .graph-bars {
             z-index: 2;
         }
@@ -2597,6 +2610,7 @@
     --print-content-width: 1800px;
     --print-horizontal-offset: 0px;
     --print-transform-scale: 0.8;
+    --print-graph-height: 240px;
 }
 
 html.print-mode,
@@ -2606,6 +2620,12 @@ body.print-mode {
 
 body.print-mode .no-print {
     display: none !important;
+}
+
+html.print-mode .graph-canvas,
+body.print-mode .graph-canvas {
+    min-height: var(--print-graph-height, 240px) !important;
+    height: var(--print-graph-height, 240px) !important;
 }
 
 @media print {
@@ -2644,9 +2664,9 @@ body.print-mode .no-print {
     /* Preserve the runtime layout and scale the full board uniformly. */
     .main-container {
         display: flex !important;
-        justify-content: flex-start !important;
+        justify-content: center !important;
         width: max-content !important;
-        margin: 0 !important;
+        margin: 0 auto !important;
         padding: 0 !important;
         overflow: visible !important;
     }
@@ -2661,31 +2681,32 @@ body.print-mode .no-print {
         margin: 0 !important;
         padding: 0 !important;
         overflow: visible !important;
+        row-gap: 0 !important;
         transform: translateX(var(--print-horizontal-offset)) scale(var(--print-transform-scale, 1)) !important;
         transform-origin: top left !important;
     }
     @supports (zoom: 1) {
         .simulation-container,
         .simulation-wrapper {
-            transform: none !important;
+            transform: translateX(var(--print-horizontal-offset)) !important;
         }
     }
     .panel {
         width: 1800px !important;
         min-width: 1800px !important;
-        margin: 18px 0 !important;
+        margin: 0 !important;
         display: flex !important;
         flex-direction: column !important;
         gap: 16px !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid-page !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
     }
     .panel-footer {
         width: 1800px !important;
         min-width: 1800px !important;
-        margin: 16px 0 18px 0 !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid-page !important;
+        margin: 0 !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
     }
     .top-row {
         display: grid !important;
@@ -2698,14 +2719,37 @@ body.print-mode .no-print {
     .right-column {
         padding: clamp(12px, 2vw, 18px) !important;
     }
+    .instructions-panel {
+        display: none !important;
+    }
     .graph-canvas {
         position: relative !important;
-        min-height: 0 !important;
-        height: auto !important;
+        min-height: var(--print-graph-height, 240px) !important;
+        height: var(--print-graph-height, 240px) !important;
+    }
+    .graph-canvas.use-print-image #graphPlot,
+    .graph-canvas.use-print-image #graphBars {
+        display: none !important;
+    }
+    .graph-canvas.use-print-image .graph-print-image-main {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        display: block !important;
+        padding: 0 !important;
+        object-fit: fill !important;
     }
     #graphPlot {
-        position: relative !important;
-        inset: auto !important;
+        position: absolute !important;
+        inset: 0 !important;
+    }
+    .graph-actions,
+    #plotGraphBtn,
+    #reportBtn,
+    #printBtn {
+        display: none !important;
+        visibility: hidden !important;
     }
     .panel-footer__copyright {
         padding: 0.35rem 0.7rem 0.4rem !important;

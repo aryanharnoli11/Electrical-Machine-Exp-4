@@ -102,6 +102,7 @@ jsPlumb.ready(function () {
 
   let currentStepIndex = 0;
   let isPreparingPrint = false;
+  let isPrintGraphPrepared = false;
 
   let checkClickedAfterCompletion = false;
 
@@ -574,6 +575,10 @@ jsPlumb.ready(function () {
     plotGraphBtn.style.pointerEvents = shouldDisable ? "none" : "auto";
   }
 
+  const GRAPH_X_AXIS_LABEL = "<b>Armature Voltage (V)</b>";
+  const GRAPH_Y_AXIS_LABEL = "<b>Speed (RPM)</b>";
+  const GRAPH_TITLE_LABEL = "<b>Speed (RPM) vs Armature Voltage (V)</b>";
+
   function drawGraph(options = {}) {
     const minPoints = Number.isFinite(options.minPoints) ? options.minPoints : MIN_GRAPH_POINTS;
     const silent = Boolean(options.silent);
@@ -594,7 +599,12 @@ jsPlumb.ready(function () {
     if (graphBars) graphBars.style.display = "none";
 
     const graphCanvas = document.querySelector(".graph-canvas");
-    if (graphCanvas) graphCanvas.classList.add("is-plotting");
+    if (graphCanvas) {
+      graphCanvas.classList.add("is-plotting");
+      graphCanvas.classList.remove("use-print-image");
+      const graphPrintImage = graphCanvas.querySelector(".graph-print-image-main");
+      if (graphPrintImage) graphPrintImage.removeAttribute("src");
+    }
 
     const graphPlot = document.getElementById("graphPlot");
     if (!graphPlot) return Promise.resolve(false);
@@ -622,10 +632,10 @@ jsPlumb.ready(function () {
       };
 
       const layout = {
-        title: { text: "<b>Speed (RPM) vs Armature Voltage (V)</b>", font: { size: 16 } },
+        title: { text: GRAPH_TITLE_LABEL, font: { size: 16 } },
         margin: { l: 120, r: 30, t: 60, b: 100 },
         xaxis: {
-          title: { text: "Armature Voltage (V)", standoff: 40, font: { color: "#2c1a0a", size: 14, family: "Arial Black" } },
+          title: { text: GRAPH_X_AXIS_LABEL, standoff: 40, font: { color: "#2c1a0a", size: 14, family: "Arial Black" } },
           type: "category",
           categoryarray: xValues.map(String),
           showgrid: true,
@@ -633,7 +643,7 @@ jsPlumb.ready(function () {
           zeroline: false
         },
         yaxis: {
-          title: { text: "Speed (RPM)", standoff: 50, font: { color: "#2c1a0a", size: 14, family: "Arial Black" } },
+          title: { text: GRAPH_Y_AXIS_LABEL, standoff: 50, font: { color: "#2c1a0a", size: 14, family: "Arial Black" } },
           type: "category",
           categoryarray: yValues.map(String),
           showgrid: true,
@@ -669,13 +679,150 @@ jsPlumb.ready(function () {
     return hasGraphDataForPrint;
   }
 
+  function getMainGraphPrintImageElement(graphCanvas) {
+    if (!graphCanvas) return null;
+    let graphPrintImage = graphCanvas.querySelector(".graph-print-image-main");
+    if (!graphPrintImage) {
+      graphPrintImage = document.createElement("img");
+      graphPrintImage.className = "graph-print-image-main";
+      graphPrintImage.alt = "Output graph";
+      graphCanvas.appendChild(graphPrintImage);
+    }
+    return graphPrintImage;
+  }
+
+  async function prepareMainGraphForPrint() {
+    const graphPlot = document.getElementById("graphPlot");
+    const graphCanvas = document.querySelector(".graph-canvas");
+    if (!graphPlot || !graphCanvas || !window.Plotly) return false;
+
+    const graphPrintImage = getMainGraphPrintImageElement(graphCanvas);
+    const computed = window.getComputedStyle(graphPlot);
+    const isVisible = computed && computed.display !== "none" && graphPlot.childElementCount > 0;
+    if (!isVisible) {
+      graphCanvas.classList.remove("use-print-image");
+      graphPrintImage?.removeAttribute("src");
+      isPrintGraphPrepared = false;
+      return false;
+    }
+
+    const canvasRect = graphCanvas.getBoundingClientRect();
+    const plotRect = graphPlot.getBoundingClientRect();
+    const targetPrintWidth = 1600;
+    const targetPrintHeight = 300;
+    const width = Math.max(
+      targetPrintWidth,
+      Math.floor((canvasRect && canvasRect.width ? canvasRect.width : plotRect.width) - 24)
+    );
+    const height = Math.max(
+      targetPrintHeight,
+      Math.floor((canvasRect && canvasRect.height ? canvasRect.height : plotRect.height) - 28)
+    );
+
+    await Promise.resolve(
+      window.Plotly.relayout(graphPlot, {
+        autosize: false,
+        width,
+        height,
+        showlegend: false,
+        title: { text: "" },
+        margin: { l: 58, r: 16, t: 18, b: 56 },
+        xaxis: {
+          automargin: true,
+          title: { text: GRAPH_X_AXIS_LABEL, standoff: 14, font: { size: 21 } },
+          tickfont: { size: 18 }
+        },
+        yaxis: {
+          automargin: true,
+          title: { text: GRAPH_Y_AXIS_LABEL, standoff: 10, font: { size: 21 } },
+          tickfont: { size: 18 }
+        }
+      })
+    ).catch(() => { });
+
+    if (window.Plotly && window.Plotly.Plots && typeof window.Plotly.Plots.resize === "function") {
+      window.Plotly.Plots.resize(graphPlot);
+    }
+    isPrintGraphPrepared = true;
+
+    if (graphPrintImage && typeof window.Plotly.toImage === "function") {
+      try {
+        const imageData = await window.Plotly.toImage(graphPlot, {
+          format: "png",
+          width: Math.max(1200, width * 2),
+          height: Math.max(700, height * 2)
+        });
+        if (imageData) {
+          graphPrintImage.src = imageData;
+          graphCanvas.classList.add("use-print-image");
+        } else {
+          graphCanvas.classList.remove("use-print-image");
+        }
+      } catch {
+        graphCanvas.classList.remove("use-print-image");
+      }
+    }
+
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve(isPrintGraphPrepared)));
+    });
+  }
+
+  function restoreMainGraphAfterPrint() {
+    const graphPlot = document.getElementById("graphPlot");
+    const graphCanvas = document.querySelector(".graph-canvas");
+    const graphPrintImage = graphCanvas && graphCanvas.querySelector(".graph-print-image-main");
+
+    if (graphCanvas) graphCanvas.classList.remove("use-print-image");
+    if (graphPrintImage) graphPrintImage.removeAttribute("src");
+    isPrintGraphPrepared = false;
+
+    if (!graphPlot || !window.Plotly) return;
+
+    Promise.resolve(
+      window.Plotly.relayout(graphPlot, {
+        autosize: true,
+        width: null,
+        height: null,
+        showlegend: false,
+        title: { text: GRAPH_TITLE_LABEL, font: { size: 16 } },
+        margin: { l: 120, r: 30, t: 60, b: 100 },
+        xaxis: {
+          automargin: true,
+          title: { text: GRAPH_X_AXIS_LABEL, standoff: 40, font: { color: "#2c1a0a", size: 14, family: "Arial Black" } },
+          tickfont: { size: 12 }
+        },
+        yaxis: {
+          automargin: true,
+          title: { text: GRAPH_Y_AXIS_LABEL, standoff: 50, font: { color: "#2c1a0a", size: 14, family: "Arial Black" } },
+          tickfont: { size: 12 }
+        }
+      })
+    )
+      .catch(() => { })
+      .then(() => {
+        if (window.Plotly && window.Plotly.Plots && typeof window.Plotly.Plots.resize === "function") {
+          window.Plotly.Plots.resize(graphPlot);
+        }
+      });
+  }
+
   async function prepareGraphForPrint() {
     const hasGraphDataForPrint = setPrintGraphDensityClass();
-    if (!hasGraphDataForPrint) return false;
+    if (!hasGraphDataForPrint) {
+      restoreMainGraphAfterPrint();
+      return false;
+    }
 
     isPreparingPrint = true;
     try {
-      return await drawGraph({ silent: true, minPoints: 2 });
+      const graphPlotted = await drawGraph({ silent: true, minPoints: 2 });
+      if (!graphPlotted) {
+        restoreMainGraphAfterPrint();
+        return false;
+      }
+      await prepareMainGraphForPrint();
+      return true;
     } finally {
       isPreparingPrint = false;
     }
@@ -1863,7 +2010,12 @@ jsPlumb.ready(function () {
       const graphBarsReset = document.getElementById("graphBars");
       if (graphBarsReset) graphBarsReset.style.display = "block";
       const graphCanvas = document.querySelector(".graph-canvas");
-      graphCanvas?.classList.remove("is-plotting");
+      if (graphCanvas) {
+        graphCanvas.classList.remove("is-plotting", "use-print-image");
+        const graphPrintImage = graphCanvas.querySelector(".graph-print-image-main");
+        if (graphPrintImage) graphPrintImage.removeAttribute("src");
+      }
+      isPrintGraphPrepared = false;
       // Play Reset.wav if guide was active when reset was clicked
       if (wasGuideActive) {
         playAudio("audiosimulation/Reset.wav");
@@ -2009,9 +2161,29 @@ jsPlumb.ready(function () {
   const PRINT_PAGE_WIDTH_MM = 297;
   const PRINT_PAGE_HEIGHT_MM = 210;
   const PRINT_PAGE_MARGIN_MM = 10;
+  const PRINT_HEIGHT_BUFFER_PX = 24;
+  const PRINT_SCALE_SAFETY_FACTOR = 0.985;
+  const PRINT_SCALE_MIN = 0.2;
 
   function mmToPx(mm) {
     return (mm * 96) / 25.4;
+  }
+
+  function parseCssNumber(value) {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function getOuterBoxSize(element) {
+    if (!element) return { width: 0, height: 0 };
+    const rect = element.getBoundingClientRect();
+    const styles = window.getComputedStyle(element);
+    const marginX = parseCssNumber(styles.marginLeft) + parseCssNumber(styles.marginRight);
+    const marginY = parseCssNumber(styles.marginTop) + parseCssNumber(styles.marginBottom);
+    return {
+      width: rect.width + marginX,
+      height: rect.height + marginY
+    };
   }
 
   function updateSinglePagePrintScale() {
@@ -2021,15 +2193,22 @@ jsPlumb.ready(function () {
     const footer = document.querySelector(".panel-footer");
     if (!wrapper || !panel || !footer) return;
 
+    const panelOuter = getOuterBoxSize(panel);
+    const footerOuter = getOuterBoxSize(footer);
+    const stackedOuterHeight = panelOuter.height + footerOuter.height + 8;
+    const stackedScrollHeight = panel.scrollHeight + footer.scrollHeight + 8;
+
     const contentWidth = Math.max(
-      wrapper.scrollWidth,
       panel.scrollWidth,
-      footer.scrollWidth
+      footer.scrollWidth,
+      panelOuter.width,
+      footerOuter.width
     );
-    const contentHeight = Math.max(
-      wrapper.scrollHeight,
-      panel.scrollHeight + footer.scrollHeight
+    const baseContentHeight = Math.max(
+      stackedOuterHeight,
+      stackedScrollHeight
     );
+    const contentHeight = baseContentHeight + PRINT_HEIGHT_BUFFER_PX;
     if (!contentWidth || !contentHeight) return;
 
     document.documentElement.style.setProperty("--print-scale", "1");
@@ -2048,8 +2227,8 @@ jsPlumb.ready(function () {
       printableHeightPx / contentHeight
     );
 
-    const safetyScale = rawScale * 0.985;
-    const clampedScale = Math.max(0.2, Math.min(1, safetyScale));
+    const safetyScale = rawScale * PRINT_SCALE_SAFETY_FACTOR;
+    const clampedScale = Math.max(PRINT_SCALE_MIN, Math.min(1, safetyScale));
     const horizontalOffset = Math.max(0, (printableWidthPx - (contentWidth * clampedScale)) / 2);
 
     document.documentElement.style.setProperty("--print-scale", clampedScale.toFixed(4));
@@ -2088,19 +2267,24 @@ jsPlumb.ready(function () {
 
   window.addEventListener("beforeprint", () => {
     setPrintModeClass(true);
-    setPrintGraphDensityClass();
-    updateSinglePagePrintScale();
-    repaintPrintConnections();
-    setTimeout(() => {
-      updateSinglePagePrintScale();
-      repaintPrintConnections();
-    }, 60);
+    const prepPromise = isPrintGraphPrepared ? Promise.resolve(true) : prepareGraphForPrint();
+    Promise.resolve(prepPromise)
+      .catch(() => { })
+      .then(() => {
+        updateSinglePagePrintScale();
+        repaintPrintConnections();
+        setTimeout(() => {
+          updateSinglePagePrintScale();
+          repaintPrintConnections();
+        }, 60);
+      });
   });
 
   window.addEventListener("afterprint", () => {
     setPrintModeClass(false);
     clearSinglePagePrintScale();
     document.documentElement.classList.remove("print-no-graph-data");
+    restoreMainGraphAfterPrint();
     repaintPrintConnections();
   });
 
@@ -2116,7 +2300,7 @@ jsPlumb.ready(function () {
       updateSinglePagePrintScale();
       repaintPrintConnections();
       await waitForStablePrintLayout();
-      setTimeout(() => window.print(), 80);
+      setTimeout(() => window.print(), 120);
     });
   }
 });
