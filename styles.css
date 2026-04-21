@@ -509,7 +509,7 @@
         }
 
 
-        .meter-card img {
+        .meter-card .meter-face {
             position: relative;
             width: 100%;
             height: 100%;
@@ -517,6 +517,18 @@
             display: block;
             border-radius: 4px;
             max-height: 100%;
+            z-index: 1;
+        }
+
+        .ammeter-card .ammeter-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: scale(1.32);
+            transform-origin: center;
         }
         .rpm-box .rpm-image {
             width: 88%;
@@ -783,11 +795,13 @@
         }
 
         .data-table thead th {
-        font-size: 10.5px;
+        font-size: 10px;
         line-height: 1.1;
         white-space: nowrap;
-        letter-spacing: 0.01em;
-        padding: 5px 4px;
+        letter-spacing: 0;
+        padding: 5px 3px;
+        overflow: hidden;
+        text-overflow: clip;
     }
     .data-table tbody td {
         font-size: 11.5px;
@@ -798,12 +812,16 @@
         width: 12%;
     }
     .data-table th:nth-child(2),
-    .data-table td:nth-child(2),
+    .data-table td:nth-child(2) {
+        width: 35%;
+    }
     .data-table th:nth-child(3),
-    .data-table td:nth-child(3),
+    .data-table td:nth-child(3) {
+        width: 31%;
+    }
     .data-table th:nth-child(4),
     .data-table td:nth-child(4) {
-        width: 29.333%;
+        width: 22%;
     }
 
     .data-table th:first-child {
@@ -1193,33 +1211,42 @@
             }
         }
 
-        .meter-needle1 {
+        .meter-needle1,
+        .meter-needle2,
+        .meter-needle3 {
             position: absolute;
             width: 40px;
-            height: auto;
+            aspect-ratio: 2 / 3;
             left: 55%;
             top: 50%;
+            z-index: 4;
+            pointer-events: none;
             transform-origin: 50% 90%;
+        }
+
+        .meter-needle1 img,
+        .meter-needle2 img,
+        .meter-needle3 img {
+            width: 100%;
+            height: 100%;
+            max-height: none;
+            object-fit: contain;
+            border-radius: 0;
+            display: block;
+        }
+
+        .meter-needle1 {
             transform: translate(-75%, -82%) rotate(-75deg);
         }
 
         .meter-needle2 {
-            position: absolute;
-            width: 40px;
-            height: auto;
-            left: 55%;
-            top: 50%;
-            transform-origin: 50% 90%;
             transform: translate(-75%, -82%) rotate(-75deg);
         }
+
         .meter-needle3 {
-            position: absolute;
-            width: 40px;
-            height: auto;
             left: 49%;
             top: 52%;
-            transform-origin: 50% 90%;
-            transform: translate(-36%, -95%) rotate(-71deg);
+            transform: translate(-30%, -90%) rotate(-70deg);
         }
 
 
@@ -1687,13 +1714,6 @@
     height: auto;
     max-height: none;
     } */
-        /* STEP 3: Increase ammeter size safely */
-        .ammeter-card .ammeter-inner {
-            transform: scale(1.07);
-            /* 🔼 change this value */
-            transform-origin: center;
-        }
-
         /* ===============================
     🎧 TAP TO LISTEN ANIMATION
     =============================== */
@@ -2760,3 +2780,4 @@ body.print-mode .no-print {
         display: none !important;
     }
 }
+

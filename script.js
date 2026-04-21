@@ -493,7 +493,7 @@ jsPlumb.ready(function () {
       <thead>
         <tr>
           <th>S NO.</th>
-          <th>Armature Resistance (Ω)</th>
+          <th>Armature Resistance (&Omega;)</th>
           <th>Armature Voltage (V)</th>
           <th>Speed (RPM)</th>
         </tr>

@@ -177,6 +177,7 @@
         .component-media {
             width: 220px;
             height: 220px;
+            position: relative;
             border-radius: 14px;
             border: 1px solid #e1d8cb;
             background: linear-gradient(145deg, #f9f4ed, #e3d8ca);
@@ -191,6 +192,30 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+        }
+        .component-image.is-ammeter {
+            width: 132%;
+            height: 132%;
+            max-width: none;
+            max-height: none;
+        }
+        .component-meter-needle {
+            position: absolute;
+            width: clamp(26px, 12%, 36px);
+            aspect-ratio: 2 / 3;
+            left: var(--meter-needle-left, 55%);
+            top: var(--meter-needle-top, 50%);
+            transform: translate(var(--meter-needle-offset-x, -75%), var(--meter-needle-offset-y, -82%))
+                rotate(var(--meter-needle-rotation, -75deg));
+            transform-origin: 50% 90%;
+            object-fit: contain;
+            pointer-events: none;
+            z-index: 3;
+            opacity: 0;
+            transition: opacity var(--dur-fast) var(--ease-in);
+        }
+        .component-media.has-needle .component-meter-needle {
+            opacity: 1;
         }
         .component-content {
             flex: 1;
@@ -509,7 +534,8 @@
         <main class="component-viewer">
             <div class="component-card" id="componentCard">
                 <div class="component-media">
-                    <img id="componentImage" src="" alt="">
+                    <img class="component-image" id="componentImage" src="" alt="">
+                    <img class="component-meter-needle" id="componentNeedle" src="images/needle.png" alt="" aria-hidden="true">
                 </div>
                 <div class="component-content">
                     <h1 class="component-title" id="componentTitle"></h1>
@@ -601,6 +627,7 @@
                     "This ammeter is connected in series with the DC motor. Its purpose is to measure the current drawn by the DC motor while it is operating.",
                 audio: "./audio/ammeter.wav"
             },
+    
             {
                 key: "voltmeter",
                 name: "Voltmeter",
@@ -609,7 +636,14 @@
                     "It is connected in parallel across the MCB. The purpose of this voltmeter is to measure the voltage of the main supply.",
                 audio: "./audio/voltmeter.wav"
             },
-           
+            {
+                key: "voltmeter",
+                name: "Voltmeter",
+                image: "images/voltmeter.png",
+                description:
+                    "It is connected in parallel across the MCB. The purpose of this voltmeter is to measure the voltage of the main supply.",
+                audio: "./audio/voltmeter.wav"
+            },
             {
 
                key: "rpm-indicator",
@@ -626,7 +660,9 @@
 
         const thumbsEl = document.getElementById("componentThumbs");
         const cardEl = document.getElementById("componentCard");
+        const mediaEl = document.querySelector(".component-media");
         const imageEl = document.getElementById("componentImage");
+        const needleEl = document.getElementById("componentNeedle");
         const titleEl = document.getElementById("componentTitle");
         const definitionEl = document.getElementById("componentDefinition");
         const indexEl = document.getElementById("componentIndex");
@@ -650,9 +686,25 @@
         let activeSpeechToken = 0;
         let activeComponent = components[0];
        const autoPlayByDefault = !isEmbedded;
-let autoPlayOnChange = false;
+        let autoPlayOnChange = false;
         const visitedComponents = new Set();
         let completionSent = false;
+        const meterNeedleConfig = {
+            voltmeter: {
+                left: "55%",
+                top: "50%",
+                offsetX: "-75%",
+                offsetY: "-82%",
+                rotation: "-75deg"
+            },
+            ammeter: {
+                left: "49%",
+                top: "52%",
+                offsetX: "-30%",
+                offsetY: "-90%",
+                rotation: "-70deg"
+            }
+        };
 
         function clearAutoAdvanceTimer() {
             if (!autoAdvanceTimer) return;
@@ -907,6 +959,18 @@ let autoPlayOnChange = false;
 function applyComponent(component) {
     imageEl.src = component.image;
     imageEl.alt = component.name;
+    imageEl.classList.toggle("is-ammeter", component.key === "ammeter");
+
+    const needle = meterNeedleConfig[component.key];
+    mediaEl.classList.toggle("has-needle", Boolean(needle));
+    if (needle && needleEl) {
+        mediaEl.style.setProperty("--meter-needle-left", needle.left);
+        mediaEl.style.setProperty("--meter-needle-top", needle.top);
+        mediaEl.style.setProperty("--meter-needle-offset-x", needle.offsetX);
+        mediaEl.style.setProperty("--meter-needle-offset-y", needle.offsetY);
+        mediaEl.style.setProperty("--meter-needle-rotation", needle.rotation);
+    }
+
     titleEl.textContent = component.name;
     definitionEl.textContent = component.description;
     prepareAudio(component);
