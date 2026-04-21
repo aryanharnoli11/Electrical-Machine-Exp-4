@@ -1006,12 +1006,12 @@
         .replace(/(<\/(?:span|strong|b|em)>)(?=[A-Za-z0-9])/g, "$1 ")
         .replace(/text-align\s*:\s*justify\s*;?/gi, "text-align:left;")
         .replace(
-          /<p><span class="label">Experiment Title:<\/span>\s*To study the Load Characteristics of DC shunt generator<\/p>/g,
-          '<p><span class="label">Experiment Title:</span> To Study the Load Characteristics of a DC Shunt Generator</p>'
+          /<p><span class="label">Experiment Title:<\/span>\s*To study the speed control of a DC motor by the armature resistance control method<\/p>/g,
+          '<p><span class="label">Experiment Title:</span> To study the speed control of a DC motor by the armature resistance control method</p>'
         )
         .replace(
           /<p style="text-align:left;">To study the external characteristic of a DC shunt generator by varying the lamp load, measuring the terminal voltage and load current, and plotting the terminal voltage versus load current [^<]* curve\.<\/p>/g,
-          '<p style="text-align:left;">To study the load characteristics of a DC shunt generator by varying the lamp load, measuring terminal voltage and load current, and plotting the V-I characteristic curve.</p>'
+          '<p style="text-align:left;">To study the speed control of a DC motor by the armature resistance control method</p>'
         )
         .replace(
           /<p style="text-align:left;">Connections were completed as instructed, supply was switched ON, lamp load was varied, and the corresponding load current and terminal voltage readings were recorded, and a graph was generated between terminal voltage and load current\.<\/p>/g,
@@ -1683,4 +1683,3 @@
   </script>
 </body>
 </html>
-
