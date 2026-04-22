@@ -1047,8 +1047,8 @@
     const SIMULATION_DEMO_REMINDER_ALERT_MESSAGE = "I hope you've completed the demo.";
     const SIMULATION_DEMO_REQUIRED_ALERT_MESSAGE = "To proceed further, please complete the demo first.";
     const SIMULATION_ALERT_AUDIO_SOURCES = {
-      [SIMULATION_TABS_ALERT_MESSAGE]: "./audio/simulationsection.wav",
-      [SIMULATION_DEMO_REMINDER_ALERT_MESSAGE]: "./audio/experimentopen.wav",
+      [SIMULATION_TABS_ALERT_MESSAGE]: "./pagesaudio/simulationsection.wav",
+      [SIMULATION_DEMO_REMINDER_ALERT_MESSAGE]: "./pagesaudio/experimentopen.wav",
       [SIMULATION_DEMO_REQUIRED_ALERT_MESSAGE]: "./audio/demotab.wav"
     };
 
@@ -1058,6 +1058,9 @@
       if (!audioSrc) return;
       if (soundEl.getAttribute('src') !== audioSrc) {
         soundEl.setAttribute('src', audioSrc);
+        if (typeof soundEl.load === 'function') {
+          soundEl.load();
+        }
       }
       soundEl.currentTime = 0;
       const playPromise = soundEl.play();

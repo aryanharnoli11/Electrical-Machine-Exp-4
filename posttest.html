@@ -1081,7 +1081,7 @@ function updateCheckButtonState() {
 }
 
 const POSTTEST_WELCOME_ALERT_MESSAGE = "Here, you will receive 5 questions at a time. Each time you click on the Refresh button, a new set of questions will be generated. Please note that all your attempted questions will be recorded and reflected in your Progress Report if you choose to generate it.";
-const POSTTEST_WELCOME_ALERT_AUDIO_SRC = "./audio/pretestpostestaudio.wav";
+const POSTTEST_WELCOME_ALERT_AUDIO_SRC = "./pagesaudio/pretestpostestaudio.wav";
 let popupOnClose = null;
 
 function playMappedAlertAudio(soundEl, message) {
@@ -1090,6 +1090,9 @@ function playMappedAlertAudio(soundEl, message) {
   if (normalizedMessage !== POSTTEST_WELCOME_ALERT_MESSAGE) return;
   if (soundEl.getAttribute("src") !== POSTTEST_WELCOME_ALERT_AUDIO_SRC) {
     soundEl.setAttribute("src", POSTTEST_WELCOME_ALERT_AUDIO_SRC);
+    if (typeof soundEl.load === "function") {
+      soundEl.load();
+    }
   }
   soundEl.currentTime = 0;
   const playPromise = soundEl.play();

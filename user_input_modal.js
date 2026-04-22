@@ -19,7 +19,7 @@
     "Please fill out the user form to access the progress report.";
   const PROGRESS_REPORT_ACCESS_ALERT_SIM_ONLY_MESSAGE =
     "Please generate the simulation report by performing the experiment.";
-  const PROGRESS_REPORT_ACCESS_ALERT_AUDIO_SRC = "./audio/progressreportalert.wav";
+  const PROGRESS_REPORT_ACCESS_ALERT_AUDIO_SRC = "./pagesaudio/progressreportalert.wav";
   let userFormPromptAudioEl = null;
   let progressReportAccessAlertAudioEl = null;
 
