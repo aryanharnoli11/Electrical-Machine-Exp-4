@@ -14,7 +14,7 @@ jsPlumb.ready(function () {
     if (box) box.classList.add("danger");
     modal.classList.add("show");
 
-    if (sound) {
+    if (sound && window.isGuideActive && window.isGuideActive()) {
       sound.currentTime = 0;
       sound.play().catch(() => { });
     }
@@ -29,7 +29,7 @@ jsPlumb.ready(function () {
   //
   // AUDIO FILE LIST (put these files in your audio/ folder):
   //   audio/intro.wav                  — "Let's connect the components"
-  //   audio/step_1.wav … step_11.wav   — Each of the 11 connection steps
+  //   audio/Connect point ... .wav      — Each of the 11 connection steps
   //   audio/wrong_connection.wav       — Wrong wire drawn
   //   audio/connections_complete.wav   — All 11 connections done
   //   audio/connections_verified.wav   — Check clicked, already verified
@@ -57,9 +57,33 @@ jsPlumb.ready(function () {
   //   audio/experiment_reset.wav       — Reset button clicked
 
   // ── active audio tracker (so we can stop the current clip on reset) ──
+  let guideActive = false;
   let _activeAudio = null;
+  const CONNECTION_STEP_AUDIO_FILES = [
+    "audiosimulation/Connect point P1 to point G exp 4.wav",
+    "audiosimulation/Connect point P2 to point H (2).wav",
+    "audiosimulation/Connect point P1 to point L (2).wav",
+    "audiosimulation/Connect point F to point D.wav",
+    "audiosimulation/Connect point E to point F1.wav",
+    "audiosimulation/Connect point A2 to point F2.wav",
+    "audiosimulation/Connect point A to point B.wav",
+    "audiosimulation/Connect point C to point K.wav",
+    "audiosimulation/Connect point M to point A1.wav",
+    "audiosimulation/Connect point I to point A1.wav",
+    "audiosimulation/Connect point J to point A2.wav"
+  ];
+
+  function playConnectionStepAudio(stepNo) {
+    const index = Number(stepNo) - 1;
+    const src = CONNECTION_STEP_AUDIO_FILES[index];
+    if (!src) return;
+    playAudio(src);
+  }
 
   function playAudio(src) {
+    // Never play guide audio unless voice guidance is enabled.
+    if (!guideActive) return;
+
     // Stop any currently playing guide audio before starting the next one
     if (_activeAudio) {
       _activeAudio.pause();
@@ -106,7 +130,6 @@ jsPlumb.ready(function () {
 
   let checkClickedAfterCompletion = false;
 
-  let guideActive = false;
   let introSpoken = false;
   let fieldRheostatAudioPlayed = false;
 
@@ -222,7 +245,7 @@ jsPlumb.ready(function () {
     if (starterEngaged && !fieldLocked) {
       clearSpeakHighlights();
       // 🔊 AUDIO: plays when guide tapped and starter already engaged
-      playAudio("audiosimulation/AfterstarterON.wav");
+      playAudio("audiosimulation/After starter ON.wav");
       return;
     }
 
@@ -262,8 +285,7 @@ jsPlumb.ready(function () {
     highlightStep(a, b);
 
     // 🔊 AUDIO: plays the instruction for each specific step
-    // Files needed: audio/step_1.wav … audio/step_11.wav
-    playAudio(`audiosimulation/step_${stepNo}.wav`);
+    playConnectionStepAudio(stepNo);
   }
 
 
@@ -912,6 +934,12 @@ jsPlumb.ready(function () {
     { resistance: 45.5, voltage: 180, rpm: 1325 },
     { resistance: 48, voltage: 176, rpm: 1300 }
   ];
+  const ARMATURE_RHEOSTAT_AUDIO_FILES = [
+    "audiosimulation/Armature Rheostat 1st.wav",
+    "audiosimulation/Armature Rheostat 2nd.wav",
+    "audiosimulation/Armature Rheostat 3rd.wav",
+    "audiosimulation/Armature Rheostat 4th.wav"
+  ];
   const MAX_OBSERVATION_READINGS = armatureTable.length + 1;
   const METER_ANGLE_MIN = -70;
   const METER_ANGLE_MAX = 70;
@@ -931,6 +959,14 @@ jsPlumb.ready(function () {
     const clamped = Math.max(inputMin, Math.min(value, inputMax));
     const ratio = (clamped - inputMin) / (inputMax - inputMin);
     return outputMin + ratio * (outputMax - outputMin);
+  }
+
+  function getArmatureRheostatAudio(stepIndex) {
+    if (!Number.isFinite(stepIndex)) return null;
+    const safeIndex = Math.max(0, Math.floor(stepIndex));
+    return ARMATURE_RHEOSTAT_AUDIO_FILES[
+      Math.min(safeIndex, ARMATURE_RHEOSTAT_AUDIO_FILES.length - 1)
+    ] || null;
   }
 
   function getRotorSpeedFromRPM(rpmValue) {
@@ -1030,7 +1066,8 @@ jsPlumb.ready(function () {
         playAudio("audiosimulation/FieldRheostatSet.wav");
         fieldRheostatAudioPlayed = true;
       } else {
-        playAudio(`audiosimulation/Arstep${stepIndex + 1}.wav`);
+        const armatureAudio = getArmatureRheostatAudio(stepIndex);
+        if (armatureAudio) playAudio(armatureAudio);
       }
     }
   }
@@ -1442,7 +1479,7 @@ jsPlumb.ready(function () {
     if (isGuideActive()) {
       // 🔊 AUDIO LOCATION 11 — field knob released and locked by user drag
       // Plays: "Field resistance is set. Now adjust the armature rheostat."
-      playAudio("audiosimulation/FieldRheostatSet.wav");
+      playAudio("audiosimulation/Field Rheostat Set.wav");
     }
     setArmatureToSnapIndex(0, false);
     showPopup("Now, click on the add to table button to add the reading to the observation table.");
@@ -1470,7 +1507,7 @@ jsPlumb.ready(function () {
     if (isGuideActive()) {
       // 🔊 AUDIO LOCATION 12 — starter handle reaches far right (engaged)
       // Plays: "Starter is on. Now set the field rheostat."
-      playAudio("audiosimulation/AfterstarterON.wav");
+      playAudio("audiosimulation/After starter ON.wav");
     }
     unlockFieldResistance();
   }
@@ -1817,7 +1854,7 @@ jsPlumb.ready(function () {
           wrongAudio.addEventListener("ended", () => {
             if (guideActive) {
               highlightStep(expectedA, expectedB);
-              playAudio(`audiosimulation/step_${stepNo}.wav`);
+              playConnectionStepAudio(stepNo);
             }
           }, { once: true });
         }
@@ -1831,7 +1868,7 @@ jsPlumb.ready(function () {
           multiAudio.addEventListener("ended", () => {
             if (guideActive) {
               highlightStep(expectedA, expectedB);
-              playAudio(`audiosimulation/step_${stepNo}.wav`);
+              playConnectionStepAudio(stepNo);
             }
           }, { once: true });
         }
@@ -2034,11 +2071,8 @@ jsPlumb.ready(function () {
         console.log(`Auto Connect: required=${requiredConnections.size}, missing after retry=${missing.length}`);
         completedByAutoConnect = true;
         clearSpeakHighlights();
-        if (guideActive) {
-          // 🔊 AUDIO LOCATION 18 — Auto Connect button clicked, wires drawn automatically
-          // Plays: "Connections complete. Click the Check button to confirm."
-          playAudio("audiosimulation/connections_complete.wav");
-        }
+        // 🔊 AUDIO LOCATION 18 — Auto Connect button clicked
+        playAudio("audiosimulation/autoconnect_completed.wav");
       });
     });
   } else {
@@ -2436,7 +2470,7 @@ function showComponentsExitAlert() {
   showPopup(COMPONENTS_EXIT_MESSAGE, "Instruction");
 
   // 🔊 Component window close hone par — sirf pehli baar bajega
-  if (componentWindowWasActuallyOpened) {
+  if (componentWindowWasActuallyOpened && window.isGuideActive && window.isGuideActive()) {
     const introAudio = new Audio("audiosimulation/ComponentsWindowIntro.wav");
     window._activeComponentIntroAudio = introAudio;
     introAudio.play().catch(() => { });
@@ -2610,14 +2644,13 @@ if (skipBtn && iframe) {
     let activeTarget = null;
     const tooltips = [
       { id: "mcb", selector: ".mcb-label", text: "Purpose: To ensure the safety of equipment and users by tripping during electrical faults." },
-      { id: "starter", selector: ".starter-body", text: "Purpose: Limits the starting current of a DC motor by using external armature resistance, which is cut out as the motor speeds up, and provides overload and no-voltage protection." },
-      { id: "lamp-load", selector: ".lampboard-dropdown, #number, .lamp-board, .lamp-grid, .lamp-bulb, .lamp-load-label", text: "Lamp Load: Variable resistive bulb bank used to change load; select the number of bulbs to vary current and observe voltage regulation." },
+      { id: "starter", selector: ".starter-body", text: "Purpose: Limits the starting current of a DC motor by using external armature resistance, which is cut out as the motor speeds up, and provides overload and no-voltage protection.\n\nRatings: Voltage - 220V DC, 7.5 HP" },
       { id: "voltmeter", selector: ".primary-voltmeter, .secondary-voltmeter, .meter-needle1, .meter-needle2", text: "Purpose: To measure the armature voltage of the DC shunt motor." },
       { id: "ammeter", selector: ".ammeter-card, .meter-needle3", text: "Purpose: To measure the field current drawn by the DC shunt motor." },
-      { id: "rpm-display", selector: ".rpm-image, .rpm-display, #rpmDisplay", text: "Purpose: An RPM indicator measures the rotational speed of the motor shaft in revolutions per minute. It helps in monitoring and analyzing the speed performance of the DC machine under different operating conditions." },
-      { id: "field-rheostat", selector: ".rheostat-img-1, .nob1", text: "Purpose: The field resistance is set once and kept constant so that the flux remains constant, so any change in speed is only due to the change in armature voltage caused by the external added resistance." },
-      { id: "armature-rheostat", selector: ".rheostat-img-2, .nob2", text: "Purpose: By varying the armature resistance causes a voltage drop in the armature circuit, allowing control of the motor speed below its rated speed." },
-      { id: "motor-box", selector: ".motor-box, .motor-box img", text: "Purpose: The DC shunt motor is the machine whose speed is being controlled in this experiment." },
+      { id: "rpm-display", selector: ".rpm-image, .rpm-display, #rpmDisplay", text: "Purpose: An RPM indicator measures the rotational speed of the motor shaft in revolutions per minute. It helps in monitoring and analyzing the speed performance of the DC machine under different operating conditions. \n\nRange:  0-2000 RPM" },
+      { id: "field-rheostat", selector: ".rheostat-img-1, .nob1", text: "Purpose: The field resistance is set once and kept constant so that the flux remains constant, so any change in speed is only due to the change in armature voltage caused by the external added resistance.\n\nRatings: 300 ohm, 3A" },
+      { id: "armature-rheostat", selector: ".rheostat-img-2, .nob2", text: "Purpose: By varying the armature resistance causes a voltage drop in the armature circuit, allowing control of the motor speed below its rated speed.\n\nRatings: 75 ohm, 5A" },
+      { id: "motor-box", selector: ".motor-box, .motor-box img", text: "Purpose: The DC shunt motor is the machine whose speed is being controlled in this experiment.\n\nRatings: 5HP, Voltage - 220 V DC, Max. Current - 19 A, Speed - 1500 RPM, Winding Type - Shunt" },
       { id: "generator-box", selector: ".generator-box, .generator-body, .generator-rotor, #gr", text: "Purpose: In a DC Shunt motor. the rotor is also called the armature. It is the rotating part of the motor where speed variation takes place due to changes in the armature voltage." }
     ];
     tooltips.forEach(t => {

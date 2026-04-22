@@ -278,16 +278,13 @@
 
         .labeld {
             position: absolute;
-            top: 245px;
-            pointer-events: none;  /* ✅ Makes label invisible to clicks */
-         user-select: none;
-        }
-
-        .rpm-box .labeld {
+            top: 265px;
             left: 50%;
             transform: translateX(-50%);
             width: max-content;
             white-space: nowrap;
+            pointer-events: none;
+            user-select: none;
         }
 
         .terminal {
@@ -2455,6 +2452,7 @@
     letter-spacing: 0.1px;
     font-weight: 600;
     color: #152a44;
+    white-space: pre-line;
     text-align: justify;
     text-justify: inter-word;
     }

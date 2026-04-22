@@ -1758,7 +1758,7 @@
       </div>
 
       <!-- Audio (UPDATED: removed autoplay attribute; controlled by JS) -->
-      <audio id="intro-audio" src="./audio/Intropanelvoice.wav" preload="auto"></audio>
+      <audio id="intro-audio" src="./audio/intro.wav" preload="auto"></audio>
 
     </div>
   </div>
@@ -1872,16 +1872,16 @@
   <script>
     const DEFAULT_CUE_LEAD = 0.65; // seconds before narration to reveal text
     const introCues = [
-      { start: 0, end: 18, text: "Welcome to the experiment \"To study the speed control of a DC motor by field resistance control method.\" In this experiment, you will learn how field resistance affects motor speed and how to analyze the speed-control characteristics of a DC motor." },
-      { start: 19, end: 42, text: "To guide you throughout the learning process, this experiment is organized into several key sections. We begin with the Aim, which clearly states what you will learn and why the experiment is important. This is followed by the Theory section, where you will find all the essential concepts and foundational knowledge required to understand the working and behavior of a DC shunt generator." },
-      { start: 43, end: 62, text: "Before you proceed to the simulation, the Pretest section helps you evaluate your basic understanding of the topic. Here, you will receive five questions at a time. Each time you click on the Refresh button, a new set of questions will be generated. All your attempted questions will be recorded and reflected in your Progress Report." },
-      { start: 63, end: 87, text: "Next, you can move on to the Procedure section, which outlines the step-by-step instructions required to perform the experiment correctly. The most important part of the experiment is the Simulation section, where you will first see a Demo tab to understand the basic procedure, followed by the actual Simulation tab, where you can use the virtual setup to perform the experiment yourself." },
-      { start: 88, end: 107, text: "After completing the simulation, the Posttest section helps you evaluate your understanding of the experiment. Similar to the Pretest, you will receive five questions at a time, and each time you click on the Refresh button, a new set of questions will be generated. All your attempted questions will be recorded again in your Progress Report." },
-      { start: 108, end: 117, text: "Finally, the References and Contributors sections provide the supporting resources and acknowledge the team involved in the development of this experiment." },
-      { start: 118, end: 134, text: "A Progress Report is also available for you, where you can track your real-time progress throughout the experiment. To access this feature, please enter your details such as name, email ID, and designation in the User Input tab. All your activities across the experiments will be recorded in one place." },
-      { start: 135, end: 154, text: "This report allows you to monitor your learning journey in detail, including your pre-test and post-test performance, such as the number of questions attempted and marks obtained. It also records the total time taken to complete the experiment and provides a detailed simulation summary of your activity." },
-      { start: 155, end: 167, text: "In addition, the Progress Report displays your basic information along with the report date, completing the Progress Report as a comprehensive and personalized record of your experiment." },
-      { start: 168, end: 174, text: "Together, these sections ensure a smooth, structured, and engaging learning experience from start to finish." },
+      { start: 0, end: 21, text: "Welcome to the experiment \"To Study the Speed Control of a DC Motor by the Armature Resistance Control Method.\" In this experiment, you will learn how to control the speed of a DC motor by varying the armature resistance, and understand how this method affects motor performance and efficiency." },
+      { start: 22, end: 37, text: "To guide you throughout the learning process, this experiment is organized into several key sections. We begin with the Aim, which clearly states the objective of studying the speed control of a DC motor using the armature resistance control method." },
+      { start: 38, end: 53, text: "This is followed by the Theory section, where you will learn the fundamental concepts required to understand DC motor operation, speed control techniques, and the effect of armature resistance on speed, torque, and overall performance." },
+      { start: 54, end: 115, text: "Before proceeding to the simulation, the Pretest section allows you to evaluate your basic understanding of DC motors and speed control methods. In this section, you will receive five questions at a time. Each time you click the Refresh button, a new set of questions will be generated. All attempted questions will be recorded and reflected in your Progress Report." },
+      { start: 116, end: 146, text: "Next, you can move to the Procedure section, which provides step-by-step instructions for conducting the experiment correctly in a virtual environment. The most important part of the experiment is the Simulation section. Here, you will first explore the Demo tab to understand the experimental setup and procedure. After that, you can proceed to the Simulation tab, where you will vary the armature resistance, observe the corresponding change in motor speed, and analyze the performance characteristics." },
+      { start: 147, end: 203, text: "Once the simulation is completed, the Posttest section helps you assess your understanding of the experiment. Similar to the Pretest, five questions will be provided at a time, and clicking the Refresh button will generate a new set. Your performance will again be recorded in the Progress Report." },
+      { start: 204, end: 214, text: "Finally, the References and Contributors sections provide supporting learning resources and acknowledge the team involved in the development of this experiment." },
+      { start: 215, end: 234, text: "A dedicated Progress Report feature is also available, allowing you to track your real-time performance. To access it, you must enter your details such as name, email ID, and designation in the User Input tab. The system records your activities across all sections of the experiment in one consolidated report." },
+      { start: 235, end: 258, text: "This report provides a detailed overview of your learning journey, including pretest and posttest performance (number of questions attempted and marks obtained), total time spent on the experiment, and a complete simulation activity summary. It also includes your basic information along with the report generation date, making it a comprehensive and personalized academic record." },
+      { start: 259, end: 311, text: "Together, these sections ensure a smooth, structured, and engaging learning experience, helping you clearly understand how the speed of a DC motor can be controlled using the armature resistance method." },
  
     ];
 
