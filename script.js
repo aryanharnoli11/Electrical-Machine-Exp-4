@@ -372,14 +372,14 @@ jsPlumb.ready(function () {
     } else if (total === 3) {
       guidedSpeak("audiosimulation/3rdreadingadd.wav");
       voiceStage = "reading_added";
-    } else if (total === 4) {
+    } else if (total === 4 || total === 6) {
       guidedSpeak("audiosimulation/1streadingadd.wav");
       voiceStage = "reading_added";
     }
 
     if (total === 5) {
       showPopup(
-        "You have added five readings. Now you can plot the graph.<br> by clicking on the graph button or add more readings to the table.",
+        "You have added five readings. Now you can plot the graph by clicking on the graph button or add more readings to the table.",
         "Graph Ready"
       );
       guidedSpeak("audiosimulation/5readingsGraph.wav");
@@ -387,6 +387,7 @@ jsPlumb.ready(function () {
     }
 
     if (total === MAX_OBSERVATION_READINGS) {
+      guidedSpeak("audiosimulation/7readingsdone.wav");
       voiceStage = "max_completed";
     }
   }
@@ -938,7 +939,9 @@ jsPlumb.ready(function () {
     "audiosimulation/Armature Rheostat 1st.wav",
     "audiosimulation/Armature Rheostat 2nd.wav",
     "audiosimulation/Armature Rheostat 3rd.wav",
-    "audiosimulation/Armature Rheostat 4th.wav"
+    "audiosimulation/Armature Rheostat 4th.wav",
+    "audiosimulation/Armature Rheostat 5th.wav",
+    "audiosimulation/Armature Rheostat 6th.wav"
   ];
   const MAX_OBSERVATION_READINGS = armatureTable.length + 1;
   const METER_ANGLE_MIN = -70;
