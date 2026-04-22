@@ -599,6 +599,7 @@
             padding: clamp(12px, 2vw, 18px);
             position: relative;
             height: 100%;
+            margin-top: 28px;
         }
 
         .motor-box img {
@@ -632,29 +633,7 @@
         
         }
 
-        /* 
-        .generator-body {
-            width: 130%;
-            height: 36vh;
-        }
-
-        .generator-rotor {
-            position: absolute;
-            width: 58%;
-            height: 58%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-        } */
-
-        /* .generator-rotor {
-            position: absolute;
-            width: 58%;
-            height: 58%;
-            /* inset: 50% auto auto 50%;
-            transform: translate(-50%, -50%); 
-        } */
+        
         .coupler {
             width: clamp(80px, 12vw, 140px);
             height: auto;
@@ -693,16 +672,6 @@
             gap: 4px;
         }
 
-        /* .connector .dot {
-            width: clamp(16px, 2.8vw, 22px);
-            height: clamp(16px, 2.8vw, 22px);
-            background: radial-gradient(circle at 35% 35%, #fefefe, #111 70%);
-            border: 2px solid #111;
-            border-radius: 50%;
-            box-shadow: 0 0 6px rgba(0, 0, 0, 0.35);
-            display: inline-block;
-            cursor: pointer;
-        } */
 
         .littledot {
             width: clamp(12px, 2vw, 18px);
@@ -748,27 +717,7 @@
     }
 
 
-        /* .data-table {
-        width: 100%;
-        border: 3px solid #111;
-        background: #e5dfd3;
-        border-collapse: collapse;
-    } */
-
-
-        /* .data-table {
-            width: 100%;
-            border: 3px solid #111;
-            background: #e5dfd3;
-            display: grid;
-            grid-template-rows: auto repeat(5, 1fr);
-        } */
-
-        /* 🔒 FIX: HTML <table> ke liye proper borders */
-        /* .data-table table {
-    width: 100%;
-    border-collapse: collapse;
-    } */
+    
         .data-table {
             width: 100%;
             border: 2px solid #111;
@@ -778,14 +727,6 @@
             /* all borders merge */
             background: #f3efe6;
         }
-        /* .data-table th,
-    .data-table td {
-        border: 2px solid #111;
-        padding: 8px;
-        text-align: center;
-        font-weight: 700;
-        background: #d7d0c4;
-    } */
 
         .data-table th,
         .data-table td {
@@ -832,21 +773,7 @@
     }
 
 
-        /* 
-    .data-table th,
-    .data-table td {
-    border: 2px solid #111;
-    padding: 6px;
-    text-align: center;
-    } */
-
-        /* 
-    .data-table-wrapper {
-    width: 100%;
-    border: 3px solid #111;
-    background: #d7d0c4;
-    padding: 6px;
-    } */
+    
         .data-table-wrapper {
             width: 100%;
             background: transparent;
@@ -855,12 +782,6 @@
         }
 
 
-        /* .table-header,
-        .table-row {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr 1.2fr;
-            border-bottom: 2px solid #111;
-        } */
 
         .table-header span {
             padding: 8px;
@@ -1716,26 +1637,7 @@
         }
 
 
-        /* ===============================
-    🎯 PIXEL-PERFECT AMMETER SIZE
-    =============================== */
-
-        /* Ammeter image stays centered */
-        /* .ammeter-face {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1;
-    } */
-
-        /* 🔥 Ammeter visual normalization */
-        /* .ammeter-face img {
-    width: 114%;      
-    height: auto;
-    max-height: none;
-    } */
+        
         /* ===============================
     🎧 TAP TO LISTEN ANIMATION
     =============================== */
@@ -2025,10 +1927,6 @@
     outline-offset: 3px;
     }
 
-
-    /* =========================
-    COMPONENT LAUNCHER (FLOATING ICON)
-    ========================= */
 
     /* =========================
     CHATBOT WIDGET

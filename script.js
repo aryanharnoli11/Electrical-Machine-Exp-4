@@ -364,9 +364,8 @@ jsPlumb.ready(function () {
       voiceStage = "five_completed";
     }
 
-    if (total === 7) {
-      guidedSpeak("audiosimulation/7readingsdone.wav");
-      voiceStage = "seven_completed";
+    if (total === MAX_OBSERVATION_READINGS) {
+      voiceStage = "max_completed";
     }
   }
 
@@ -526,8 +525,8 @@ jsPlumb.ready(function () {
       return;
     }
 
-    if (graphReadings.length >= 7) {
-      showPopup("You can add a maximum of 7 readings to the table. Now, click the Graph button.", "Maximum Readings Reached");
+    if (graphReadings.length >= MAX_OBSERVATION_READINGS) {
+      showPopup(`You can add a maximum of ${MAX_OBSERVATION_READINGS} readings to the table. Now, click the Graph button.`, "Maximum Readings Reached");
       guidedSpeak("audiosimulation/Formaxreadings.wav");
       return;
     }
@@ -665,7 +664,7 @@ jsPlumb.ready(function () {
         }
 
         if (!silent) {
-          showPopup("Graph plotted successfully. You can now generate the report.", "Graph Ready");
+          showPopup("The graph of speed vs armature voltage has been plotted successfully. Your experiment is now complete. You may view the report by clicking on the report button, then use print to print the page or reset to start again", "Graph Generated");
           voiceStage = "graph_done";
         }
         return true;
@@ -895,9 +894,17 @@ jsPlumb.ready(function () {
   let rotorRunning = false;
   let lastFrameTime = null;
   let rotorSpeed = 0;
+  const STARTER_ON_SUPPLY_VOLTAGE = 220;
+  const STARTER_ON_ARMATURE_VOLTAGE = 220;
+  const STARTER_ON_ARMATURE_CURRENT = 1;
+  const STARTER_ON_RPM = 1480;
+  const FIELD_SET_INITIAL_READING = {
+    resistance: 31.5,
+    voltage: 204,
+    rpm: 1450
+  };
 
   const armatureTable = [
-    { resistance: 31.5, voltage: 204, rpm: 1450 },
     { resistance: 34.5, voltage: 200, rpm: 1425 },
     { resistance: 39, voltage: 192, rpm: 1400 },
     { resistance: 40.5, voltage: 188, rpm: 1375 },
@@ -905,14 +912,19 @@ jsPlumb.ready(function () {
     { resistance: 45.5, voltage: 180, rpm: 1325 },
     { resistance: 48, voltage: 176, rpm: 1300 }
   ];
-  const VOLTMETER_ANGLE_MIN = -35;
-  const VOLTMETER_ANGLE_MAX = -1;
+  const MAX_OBSERVATION_READINGS = armatureTable.length + 1;
+  const METER_ANGLE_MIN = -70;
+  const METER_ANGLE_MAX = 70;
+  const VOLTMETER_SCALE_MIN = 0;
+  const VOLTMETER_SCALE_MAX = 420;
+  const AMMETER_SCALE_MIN = 0;
+  const AMMETER_SCALE_MAX = 1;
   const ROTOR_SPEED_MIN = 3;
   const ROTOR_SPEED_MAX = 17;
-  const armatureVoltageMin = Math.min(...armatureTable.map((row) => row.voltage));
-  const armatureVoltageMax = Math.max(...armatureTable.map((row) => row.voltage));
   const armatureRPMMin = Math.min(...armatureTable.map((row) => row.rpm));
   const armatureRPMMax = Math.max(...armatureTable.map((row) => row.rpm));
+  const rotorRPMMin = Math.min(STARTER_ON_RPM, armatureRPMMin);
+  const rotorRPMMax = Math.max(STARTER_ON_RPM, armatureRPMMax);
 
   function mapLinearRange(value, inputMin, inputMax, outputMin, outputMax) {
     if (inputMax === inputMin) return (outputMin + outputMax) / 2;
@@ -921,34 +933,99 @@ jsPlumb.ready(function () {
     return outputMin + ratio * (outputMax - outputMin);
   }
 
-  function updateVoltmeterByArmature(stepIndex) {
+  function getRotorSpeedFromRPM(rpmValue) {
+    return mapLinearRange(
+      rpmValue,
+      rotorRPMMin,
+      rotorRPMMax,
+      ROTOR_SPEED_MIN,
+      ROTOR_SPEED_MAX
+    );
+  }
+
+  function getVoltmeterAngle(voltageValue) {
+    return mapLinearRange(
+      voltageValue,
+      VOLTMETER_SCALE_MIN,
+      VOLTMETER_SCALE_MAX,
+      METER_ANGLE_MIN,
+      METER_ANGLE_MAX
+    );
+  }
+
+  function getAmmeterAngle(currentValue) {
+    return mapLinearRange(
+      currentValue,
+      AMMETER_SCALE_MIN,
+      AMMETER_SCALE_MAX,
+      METER_ANGLE_MIN,
+      METER_ANGLE_MAX
+    );
+  }
+
+  function setSupplyVoltmeter(voltageValue) {
+    const voltAngle = getVoltmeterAngle(voltageValue);
+    if (voltNeedle) {
+      voltNeedle.style.transform = `translate(-75%, -82%) rotate(${voltAngle}deg)`;
+    }
+  }
+
+  function setArmatureVoltmeter(voltageValue) {
+    const voltAngle = getVoltmeterAngle(voltageValue);
+    if (voltNeedle2) {
+      voltNeedle2.style.transform = `translate(-75%, -82%) rotate(${voltAngle}deg)`;
+    }
+  }
+
+  function setArmatureCurrentNeedle(currentValue) {
+    const ampAngle = getAmmeterAngle(currentValue);
+    if (ampNeedle) ampNeedle.style.transform = `rotate(${ampAngle}deg)`;
+  }
+
+  function applyStarterOnMeterState() {
+    currentArmatureResistance = 0;
+    currentVoltage = STARTER_ON_ARMATURE_VOLTAGE;
+    currentRPM = STARTER_ON_RPM;
+    armatureReadingReady = false;
+    lastArmatureStepIndex = null;
+    rotorSpeed = getRotorSpeedFromRPM(currentRPM);
+
+    setSupplyVoltmeter(STARTER_ON_SUPPLY_VOLTAGE);
+    setArmatureVoltmeter(STARTER_ON_ARMATURE_VOLTAGE);
+    setArmatureCurrentNeedle(STARTER_ON_ARMATURE_CURRENT);
+    if (rpmDisplay) rpmDisplay.textContent = String(STARTER_ON_RPM);
+  }
+
+  function applyFieldSetInitialReading() {
+    currentArmatureResistance = FIELD_SET_INITIAL_READING.resistance;
+    currentVoltage = FIELD_SET_INITIAL_READING.voltage;
+    currentRPM = FIELD_SET_INITIAL_READING.rpm;
+    armatureReadingReady = true;
+    lastArmatureStepIndex = null;
+    rotorSpeed = getRotorSpeedFromRPM(currentRPM);
+
+    setSupplyVoltmeter(STARTER_ON_SUPPLY_VOLTAGE);
+    setArmatureVoltmeter(currentVoltage);
+    setArmatureCurrentNeedle(STARTER_ON_ARMATURE_CURRENT);
+    if (rpmDisplay) rpmDisplay.textContent = String(currentRPM);
+  }
+
+  function updateVoltmeterByArmature(stepIndex, options = {}) {
+    const playStepAudio = options.playStepAudio !== false;
     const row = armatureTable[stepIndex];
     currentArmatureResistance = row.resistance;
     currentVoltage = row.voltage;
     currentRPM = row.rpm;
     armatureReadingReady = true;
     lastArmatureStepIndex = stepIndex;
-    rotorSpeed = mapLinearRange(
-      currentRPM,
-      armatureRPMMin,
-      armatureRPMMax,
-      ROTOR_SPEED_MIN,
-      ROTOR_SPEED_MAX
-    );
+    rotorSpeed = getRotorSpeedFromRPM(currentRPM);
 
-    const voltAngle = mapLinearRange(
-      currentVoltage,
-      armatureVoltageMin,
-      armatureVoltageMax,
-      VOLTMETER_ANGLE_MIN,
-      VOLTMETER_ANGLE_MAX
-    );
-    if (voltNeedle) voltNeedle.style.transform = `translate(-75%, -82%) rotate(${voltAngle}deg)`;
-    if (voltNeedle2) voltNeedle2.style.transform = `translate(-75%, -82%) rotate(${voltAngle}deg)`;
+    setSupplyVoltmeter(STARTER_ON_SUPPLY_VOLTAGE);
+    setArmatureVoltmeter(currentVoltage);
 
-    if (rpmDisplay) rpmDisplay.textContent = currentRPM;
+    if (rpmDisplay) rpmDisplay.textContent = String(currentRPM);
 
-    if (isGuideActive() && fieldLocked && starterEngaged) {
+    if (playStepAudio && isGuideActive() && fieldLocked && starterEngaged) {
       if (stepIndex === 0 && !fieldRheostatAudioPlayed) {
         playAudio("audiosimulation/FieldRheostatSet.wav");
         fieldRheostatAudioPlayed = true;
@@ -966,8 +1043,7 @@ jsPlumb.ready(function () {
   }
 
   function setFieldDefaultMeters() {
-    const ampAngle = -70 + (7.7 / 10) * 140;
-    ampNeedle.style.transform = `rotate(${ampAngle}deg)`;
+    setArmatureCurrentNeedle(STARTER_ON_ARMATURE_CURRENT);
   }
 
   const KNOB_START_X = armatureKnob
@@ -979,7 +1055,7 @@ jsPlumb.ready(function () {
   let isDragging = false;
   let armatureMovedThisDrag = false;
   let lastArmatureStepIndex = null;
-  let armatureSnapIndex = 0; // 0 = initial position, 1..7 = reading divisions
+  let armatureSnapIndex = 0; // 0 = initial position, 1..N = reading divisions
   const ARMATURE_DRAG_THRESHOLD_PX = 2;
   let armatureHomeX = KNOB_START_X;
   let armatureDivisionMinX = KNOB_START_X;
@@ -1041,18 +1117,23 @@ jsPlumb.ready(function () {
     }
 
     if (safeSnapIndex === 0) {
-      armatureReadingReady = false;
-      lastArmatureStepIndex = null;
-      currentVoltage = 0;
-      currentRPM = 0;
-      currentArmatureResistance = 0;
-      rotorSpeed = 0;
-      if (rpmDisplay) rpmDisplay.textContent = "0";
-      if (voltNeedle) {
-        voltNeedle.style.transform = "translate(-75%, -82%) rotate(-75deg)";
-      }
-      if (voltNeedle2) {
-        voltNeedle2.style.transform = "translate(-75%, -82%) rotate(-75deg)";
+      if (mcbState === "ON" && starterEngaged) {
+        if (fieldLocked) {
+          applyFieldSetInitialReading();
+        } else {
+          applyStarterOnMeterState();
+        }
+      } else {
+        armatureReadingReady = false;
+        lastArmatureStepIndex = null;
+        currentArmatureResistance = 0;
+        currentVoltage = 0;
+        currentRPM = 0;
+        rotorSpeed = 0;
+        setSupplyVoltmeter(0);
+        setArmatureVoltmeter(0);
+        setArmatureCurrentNeedle(0);
+        if (rpmDisplay) rpmDisplay.textContent = "0";
       }
       return;
     }
@@ -1096,7 +1177,7 @@ jsPlumb.ready(function () {
       computedMax = armatureRheostat.clientWidth - knobWidth;
     }
 
-    // Keep 7 divisions after initial with uniform gap.
+    // Keep all reading divisions after initial with uniform gap.
     // Preferred mode: initial->D1 gap equals all other division gaps.
     computedMax = Math.max(computedMin, computedMax);
     const equalGapFromHome =
@@ -1109,7 +1190,7 @@ jsPlumb.ready(function () {
       armatureDivisionMaxX =
         armatureHomeX + armatureDivisionStepWidth * ARMATURE_READING_STEPS;
     } else {
-      // Fallback for very tight layouts: keep all 7 divisions inside green part.
+      // Fallback for very tight layouts: keep all divisions inside green part.
       armatureDivisionMinX = computedMin;
       armatureDivisionMaxX = computedMax;
       armatureDivisionStepWidth =
@@ -1197,9 +1278,9 @@ jsPlumb.ready(function () {
     if (armatureKnob) {
       armatureKnob.style.cursor = "not-allowed";
     }
-    if (ampNeedle) ampNeedle.style.transform = "rotate(-70deg)";
-    if (voltNeedle) voltNeedle.style.transform = "translate(-75%, -82%) rotate(-75deg)";
-    if (voltNeedle2) voltNeedle2.style.transform = "translate(-75%, -82%) rotate(-75deg)";
+    setArmatureCurrentNeedle(0);
+    setSupplyVoltmeter(0);
+    setArmatureVoltmeter(0);
     if (rotor) {
       rotorRunning = false;
       rotorAngle = 0;
@@ -1285,6 +1366,7 @@ jsPlumb.ready(function () {
       mcbReady = true;
       this.src = "images/mcb-on.png";
       disableCheckAndAutoConnect();
+      setArmatureToSnapIndex(armatureSnapIndex, false);
       if (starterHandle) starterHandle.style.cursor = "grab";
       showPopup(" DC supply has been turned ON.<br> Now move the starter handle from left to right.");
       console.log("MCB ON");
@@ -1355,12 +1437,6 @@ jsPlumb.ready(function () {
     fieldDragging = false;
     fieldCurrentPercent = parseFloat(fieldKnob.style.left) || FIELD_MIN;
     fieldLocked = true;
-    armatureReadingReady = false;
-    lastArmatureStepIndex = null;
-    currentVoltage = 0;
-    currentRPM = 0;
-    currentArmatureResistance = 0;
-    if (rpmDisplay) rpmDisplay.textContent = "0";
     fieldRheostatAudioPlayed = true;
     fieldKnob.style.cursor = "not-allowed";
     if (isGuideActive()) {
@@ -1368,6 +1444,8 @@ jsPlumb.ready(function () {
       // Plays: "Field resistance is set. Now adjust the armature rheostat."
       playAudio("audiosimulation/FieldRheostatSet.wav");
     }
+    setArmatureToSnapIndex(0, false);
+    showPopup("Now, click on the add to table button to add the reading to the observation table.");
     if (armatureKnob) armatureKnob.style.cursor = "grab";
     setFieldDefaultMeters();
     if (!rotorRunning && mcbState === "ON" && starterEngaged) {
@@ -1383,6 +1461,11 @@ jsPlumb.ready(function () {
     starterHandle.style.transform = `translate(${starterMotion.endX}px, 0px)`;
     starterHandle.style.cursor = "default";
     localStorage.setItem("experimentStartTime", Date.now());
+    applyStarterOnMeterState();
+    if (!rotorRunning && rotor) {
+      rotorRunning = true;
+      requestAnimationFrame(runRotor);
+    }
     console.log("✅ Starter ON");
     if (isGuideActive()) {
       // 🔊 AUDIO LOCATION 12 — starter handle reaches far right (engaged)
