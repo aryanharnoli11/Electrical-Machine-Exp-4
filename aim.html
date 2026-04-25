@@ -1682,14 +1682,14 @@
              
 
             <ul id="intro-outline">
-              <li class="outline-item" data-start="0">Overview</li>
-              <li class="outline-item" data-start="23">Aim</li>
-              <li class="outline-item" data-start="27">Theory</li>
-              <li class="outline-item" data-start="40">Pretest</li>
-              <li class="outline-item" data-start="46">Procedure</li>
-              <li class="outline-item" data-start="55">Simulation</li>
-              <li class="outline-item" data-start="62">Posttest</li>
-              <li class="outline-item" data-start="68">References & Contributors</li>
+              <li class="outline-item" data-start="0" data-cue-index="0">Overview</li>
+              <li class="outline-item" data-start="16" data-cue-index="1">Aim</li>
+              <li class="outline-item" data-start="27" data-cue-index="2">Theory</li>
+              <li class="outline-item" data-start="45" data-cue-index="3">Pretest</li>
+              <li class="outline-item" data-start="71" data-cue-index="4">Procedure</li>
+              <li class="outline-item" data-start="80" data-cue-index="4" data-cue-offset="9">Simulation</li>
+              <li class="outline-item" data-start="96" data-cue-index="5">Posttest</li>
+              <li class="outline-item" data-start="111" data-cue-index="6">References & Contributors</li>
             </ul>
 
           </div>
@@ -1870,19 +1870,19 @@
 
   <!-- INTRO POPUP SCRIPT (auto-open based on data-intro-autoshow) -->
   <script>
-    const DEFAULT_CUE_LEAD = 0.65; // seconds before narration to reveal text
+    const DEFAULT_CUE_LEAD = 0; // keep text switch aligned with narration
+    const DEFAULT_OUTLINE_CUE_LEAD = 0; // keep outline switch aligned with narration
     const introCues = [
-      { start: 0, end: 21, text: "Welcome to the experiment \"To Study the Speed Control of a DC Motor by the Armature Resistance Control Method.\" In this experiment, you will learn how to control the speed of a DC motor by varying the armature resistance, and understand how this method affects motor performance and efficiency." },
-      { start: 22, end: 37, text: "To guide you throughout the learning process, this experiment is organized into several key sections. We begin with the Aim, which clearly states the objective of studying the speed control of a DC motor using the armature resistance control method." },
-      { start: 38, end: 53, text: "This is followed by the Theory section, where you will learn the fundamental concepts required to understand DC motor operation, speed control techniques, and the effect of armature resistance on speed, torque, and overall performance." },
-      { start: 54, end: 115, text: "Before proceeding to the simulation, the Pretest section allows you to evaluate your basic understanding of DC motors and speed control methods. In this section, you will receive five questions at a time. Each time you click the Refresh button, a new set of questions will be generated. All attempted questions will be recorded and reflected in your Progress Report." },
-      { start: 116, end: 146, text: "Next, you can move to the Procedure section, which provides step-by-step instructions for conducting the experiment correctly in a virtual environment. The most important part of the experiment is the Simulation section. Here, you will first explore the Demo tab to understand the experimental setup and procedure. After that, you can proceed to the Simulation tab, where you will vary the armature resistance, observe the corresponding change in motor speed, and analyze the performance characteristics." },
-      { start: 147, end: 203, text: "Once the simulation is completed, the Posttest section helps you assess your understanding of the experiment. Similar to the Pretest, five questions will be provided at a time, and clicking the Refresh button will generate a new set. Your performance will again be recorded in the Progress Report." },
-      { start: 204, end: 214, text: "Finally, the References and Contributors sections provide supporting learning resources and acknowledge the team involved in the development of this experiment." },
-      { start: 215, end: 234, text: "A dedicated Progress Report feature is also available, allowing you to track your real-time performance. To access it, you must enter your details such as name, email ID, and designation in the User Input tab. The system records your activities across all sections of the experiment in one consolidated report." },
-      { start: 235, end: 258, text: "This report provides a detailed overview of your learning journey, including pretest and posttest performance (number of questions attempted and marks obtained), total time spent on the experiment, and a complete simulation activity summary. It also includes your basic information along with the report generation date, making it a comprehensive and personalized academic record." },
-      { start: 259, end: 311, text: "Together, these sections ensure a smooth, structured, and engaging learning experience, helping you clearly understand how the speed of a DC motor can be controlled using the armature resistance method." },
- 
+      { start: 0, end: 16, text: "Welcome to the experiment \"To Study the Speed Control of a DC Motor by the Armature Resistance Control Method.\" In this experiment, you will learn how to control the speed of a DC motor by varying the armature resistance, and understand how this method affects motor performance and efficiency." },
+      { start: 16, end: 27, text: "To guide you throughout the learning process, this experiment is organized into several key sections. We begin with the Aim, which clearly states the objective of studying the speed control of a DC motor using the armature resistance control method." },
+      { start: 27, end: 45, text: "This is followed by the Theory section, where you will learn the fundamental concepts required to understand DC motor operation, speed control techniques, and the effect of armature resistance on speed, torque, and overall performance." },
+      { start: 45, end: 71, text: "Before proceeding to the simulation, the Pretest section allows you to evaluate your basic understanding of DC motors and speed control methods. In this section, you will receive five questions at a time. Each time you click the Refresh button, a new set of questions will be generated. All attempted questions will be recorded and reflected in your Progress Report." },
+      { start: 71, end: 96, text: "Next, you can move to the Procedure section, which provides step-by-step instructions for conducting the experiment correctly in a virtual environment. The most important part of the experiment is the Simulation section. Here, you will first explore the Demo tab to understand the experimental setup and procedure. After that, you can proceed to the Simulation tab, where you will vary the armature resistance, observe the corresponding change in motor speed, and analyze the performance characteristics." },
+      { start: 96, end: 111, text: "Once the simulation is completed, the Posttest section helps you assess your understanding of the experiment. Similar to the Pretest, five questions will be provided at a time, and clicking the Refresh button will generate a new set. Your performance will again be recorded in the Progress Report." },
+      { start: 111, end: 122, text: "Finally, the References and Contributors sections provide supporting learning resources and acknowledge the team involved in the development of this experiment." },
+      { start: 122, end: 136, text: "A dedicated Progress Report feature is also available, allowing you to track your real-time performance. To access it, you must enter your details such as name, email ID, and designation in the User Input tab. The system records your activities across all sections of the experiment in one consolidated report." },
+      { start: 136, end: 165, text: "This report provides a detailed overview of your learning journey, including pretest and posttest performance (number of questions attempted and marks obtained), total time spent on the experiment, and a complete simulation activity summary. It also includes your basic information along with the report generation date, making it a comprehensive and personalized academic record." },
+      { start: 165, end: 190, text: "Together, these sections ensure a smooth, structured, and engaging learning experience, helping you clearly understand how the speed of a DC motor can be controlled using the armature resistance method." },
     ];
 
     const INTRO_STORAGE_KEY = 'dcShuntIntroShown:aim';
@@ -1993,6 +1993,18 @@
         cue.end = Math.max(nextStart, cue.start + 0.5);
       });
 
+      outlineItems.forEach(item => {
+        const cueIndexRaw = item.dataset.cueIndex;
+        if (cueIndexRaw == null) return;
+
+        const cueIndex = Number(cueIndexRaw);
+        if (!Number.isInteger(cueIndex) || !introCues[cueIndex]) return;
+
+        const cueOffset = Number(item.dataset.cueOffset || 0);
+        const safeOffset = Number.isFinite(cueOffset) ? cueOffset : 0;
+        item.dataset.start = String(Math.max(0, introCues[cueIndex].start + safeOffset));
+      });
+
       cuesInitialized = true;
     }
 
@@ -2000,7 +2012,7 @@
       if (!outlineItems.length) return;
 
       let activeItem = outlineItems[0];
-      const targetTime = time + DEFAULT_CUE_LEAD;
+      const targetTime = time + DEFAULT_OUTLINE_CUE_LEAD;
 
       for (let i = 0; i < outlineItems.length; i += 1) {
         const itemStart = Number(outlineItems[i].dataset.start || 0);
@@ -2186,9 +2198,15 @@
       else if (audioEl.paused && !videoEl.paused) videoEl.pause();
     }
 
-    function handleFinalCue(targetIndex) {
+    function handleFinalCue(targetIndex, time) {
       const lastIndex = introCues.length - 1;
       if (finalMessageShown || targetIndex < lastIndex) return;
+      const lastCue = introCues[lastIndex];
+      const fallbackEnd = Number.isFinite(audioEl.duration) && audioEl.duration > 0
+        ? audioEl.duration
+        : (lastCue?.start || 0) + 8;
+      const finalCueEnd = Number.isFinite(lastCue?.end) ? lastCue.end : fallbackEnd;
+      if (time < finalCueEnd - 0.1) return;
 
       finalMessageShown = true;
 
@@ -2238,7 +2256,7 @@
       updateOutline(currentTime);
       maybeShowVideo(currentTime);
       syncVideo();
-      handleFinalCue(targetIndex);
+      handleFinalCue(targetIndex, currentTime);
     }
 
     if (audioEl) {

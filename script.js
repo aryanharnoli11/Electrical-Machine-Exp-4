@@ -523,7 +523,7 @@ jsPlumb.ready(function () {
         </tr>
       </thead>
       <tbody id="observationBody">
-</tbody>
+      </tbody>
     </table>
   `;
     observationBody = document.getElementById("observationBody");
@@ -565,17 +565,14 @@ jsPlumb.ready(function () {
       return;
     }
 
-    const placeholder = observationBody.querySelector(".placeholder-row");
-    if (placeholder) placeholder.remove();
-
-    const serial = observationBody.querySelectorAll("tr").length + 1;
+    const serial = graphReadings.length + 1;
     const tr = document.createElement("tr");
     tr.innerHTML = `
-    <td>${serial}</td>
-    <td>${formatArmatureResistance(currentArmatureResistance)}</td>
-    <td>${currentVoltage}</td>
-    <td>${currentRPM}</td>
-  `;
+      <td>${serial}</td>
+      <td>${formatArmatureResistance(currentArmatureResistance)}</td>
+      <td>${currentVoltage}</td>
+      <td>${currentRPM}</td>
+    `;
     observationBody.appendChild(tr);
 
     graphReadings.push({
@@ -1641,12 +1638,12 @@ jsPlumb.ready(function () {
       console.warn("jsPlumb: element not found:", id);
       return;
     }
-    el.style.zIndex = 2000;
+    el.style.zIndex = 30;
     const isLeftSide = anchor[0] === 0;
     const wireColor = isLeftSide ? "blue" : "red";
     const endpointAnchor = getWireAnchorForShape(anchor);
     const endpointOptions = { ...baseEndpointOptions };
-    endpointOptions.connectorStyle = { stroke: wireColor, strokeWidth: 4 };
+    endpointOptions.connectorStyle = { stroke: wireColor, strokeWidth: 4, zIndex: 25 };
     const ep = jsPlumb.addEndpoint(el, { anchor: endpointAnchor, uuid: id }, endpointOptions);
     endpointsById.set(id, ep);
     return ep;
@@ -1795,7 +1792,7 @@ jsPlumb.ready(function () {
       sourceEndpoint,
       targetEndpoint,
       connector: ["Bezier", { curviness: getWireCurvinessForConnection(sourceId, targetId) }],
-      paintStyle: { stroke: wireColor, strokeWidth: 4 }
+      paintStyle: { stroke: wireColor, strokeWidth: 4, zIndex: 25 }
     };
     if (isSelfConnection) {
       const sourceAnchor = anchors[sourceId];
@@ -1815,6 +1812,10 @@ jsPlumb.ready(function () {
   jsPlumb.bind("connection", function (info) {
     const curviness = getWireCurvinessForConnection(info.sourceId, info.targetId);
     info.connection.setConnector(["Bezier", { curviness }]);
+    const sourceAnchor = anchors[info.sourceId];
+    const isLeftSideSource = sourceAnchor ? sourceAnchor[0] === 0 : false;
+    const wireColor = isLeftSideSource ? "blue" : "red";
+    info.connection.setPaintStyle({ stroke: wireColor, strokeWidth: 4, zIndex: 25 });
     const src = info.sourceId;
     const tgt = info.targetId;
 
@@ -2648,8 +2649,8 @@ if (skipBtn && iframe) {
     const tooltips = [
       { id: "mcb", selector: ".mcb-label", text: "Purpose: To ensure the safety of equipment and users by tripping during electrical faults." },
       { id: "starter", selector: ".starter-body", text: "Purpose: Limits the starting current of a DC motor by using external armature resistance, which is cut out as the motor speeds up, and provides overload and no-voltage protection.\n\nRatings: Voltage - 220V DC, 7.5 HP" },
-      { id: "voltmeter", selector: ".primary-voltmeter, .secondary-voltmeter, .meter-needle1, .meter-needle2", text: "Purpose: To measure the armature voltage of the DC shunt motor." },
-      { id: "ammeter", selector: ".ammeter-card, .meter-needle3", text: "Purpose: To measure the field current drawn by the DC shunt motor." },
+      { id: "voltmeter", selector: ".primary-voltmeter, .secondary-voltmeter, .meter-needle1, .meter-needle2", text: "Purpose: To measure the armature voltage of the DC shunt motor.\n\n Rating:  0 - 420 V" },
+      { id: "ammeter", selector: ".ammeter-card, .meter-needle3", text: "Purpose: To measure the field current drawn by the DC shunt motor.\n\n Rating:  0 - 1 A" },
       { id: "rpm-display", selector: ".rpm-image, .rpm-display, #rpmDisplay", text: "Purpose: An RPM indicator measures the rotational speed of the motor shaft in revolutions per minute. It helps in monitoring and analyzing the speed performance of the DC machine under different operating conditions. \n\nRange:  0-2000 RPM" },
       { id: "field-rheostat", selector: ".rheostat-img-1, .nob1", text: "Purpose: The field resistance is set once and kept constant so that the flux remains constant, so any change in speed is only due to the change in armature voltage caused by the external added resistance.\n\nRatings: 300 ohm, 3A" },
       { id: "armature-rheostat", selector: ".rheostat-img-2, .nob2", text: "Purpose: By varying the armature resistance causes a voltage drop in the armature circuit, allowing control of the motor speed below its rated speed.\n\nRatings: 75 ohm, 5A" },

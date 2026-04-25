@@ -688,6 +688,19 @@
             letter-spacing: 0.02em;
         }
 
+        /* Keep jsPlumb wires above meter artwork */
+        .jtk-connector,
+        ._jsPlumb_connector,
+        svg.jtk-connector,
+        svg._jsPlumb_connector {
+            z-index: 25 !important;
+        }
+
+        .jtk-endpoint,
+        ._jsPlumb_endpoint {
+            z-index: 30 !important;
+        }
+
         .table-container {
             width: min(560px, 100%);
             align-self: stretch;
@@ -721,7 +734,6 @@
             /* single outer border */
             border-collapse: collapse;
             table-layout: fixed;
-            /* all borders merge */
             background: #f3efe6;
         }
 
@@ -769,6 +781,22 @@
         white-space: nowrap;
     }
 
+    #observation-container {
+        width: 100%;
+    }
+
+    #observation-container .data-table thead th {
+        height: 34px;
+    }
+
+    #observation-container .data-table tbody tr {
+        height: 38px;
+    }
+
+    #observation-container .data-table tbody td {
+        padding-top: 7px;
+        padding-bottom: 7px;
+    }
 
     
         .data-table-wrapper {
